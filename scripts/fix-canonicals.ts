@@ -5,7 +5,10 @@ import { env } from "../src/lib/env";
 
 async function main() {
   const stale = await prisma.article.findMany({
-    where: { canonicalUrl: { contains: "localhost" } },
+    where: {
+      status: "PUBLISHED",
+      NOT: { canonicalUrl: { startsWith: env.SITE_URL } },
+    },
     select: { id: true, slug: true, type: true },
   });
   for (const a of stale) {
