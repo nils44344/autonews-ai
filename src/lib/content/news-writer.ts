@@ -49,20 +49,34 @@ export async function writeNewsArticle(topicId: string) {
   const { min, max } = lengthFor(topic);
   const articleType = classifyType(topic);
 
-  const raw = await generateJSON(
-    newsArticlePrompt({
-      title: topic.title,
-      keywords: topic.keywords,
-      category: topic.category,
-      context,
-      minWords: min,
-      maxWords: max,
-      type: articleType,
-    }),
-    { system: HOUSE_STYLE, temperature: 0.7, maxTokens: 4096 },
-  );
-
-  const parsed = generatedArticleSchema.parse(raw);
+  // Smaller models (8B) occasionally return a too-short body or wrap the object
+  // in an array. Retry once and unwrap arrays before validating.
+  const prompt = newsArticlePrompt({
+    title: topic.title,
+    keywords: topic.keywords,
+    category: topic.category,
+    context,
+    minWords: min,
+    maxWords: max,
+    type: articleType,
+  });
+  let parsed: ReturnType<typeof generatedArticleSchema.parse> | null = null;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      let raw: unknown = await generateJSON(prompt, {
+        system: HOUSE_STYLE,
+        temperature: 0.7,
+        maxTokens: 4096,
+      });
+      if (Array.isArray(raw)) raw = raw[0];
+      parsed = generatedArticleSchema.parse(raw);
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (!parsed) throw lastErr;
   const category = await ensureCategory(topic.category, "news");
   const wc = wordCount(parsed.body);
 
