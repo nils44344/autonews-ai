@@ -3,6 +3,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" covers local dev + the build machine; the rhel targets cover
+  // serverless runtimes (Netlify/AWS Lambda) so the deployed functions can
+  // find a matching Prisma query engine.
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
