@@ -30,6 +30,61 @@ const FALLBACKS: CategoryStyle[] = [
   { badge: "bg-fuchsia-50 text-fuchsia-700", dot: "bg-fuchsia-500", gradient: "from-fuchsia-500 to-purple-600", ring: "hover:border-fuchsia-400" },
 ];
 
+// ── Memes ────────────────────────────────────────────────────────────────────
+// Render real classic-meme images via memegen.link (free, no API key). Map the
+// AI's free-text "format" to a verified memegen template id; fall back to drake.
+const MEME_TEMPLATES: Record<string, string> = {
+  "distracted boyfriend": "db",
+  db: "db",
+  drake: "drake",
+  drakeposting: "drake",
+  "two buttons": "ds",
+  "daily struggle": "ds",
+  "two-panel": "ds",
+  "two panel": "ds",
+  "change my mind": "cmm",
+  "this is fine": "fine",
+  "one does not simply": "mordor",
+  "success kid": "success",
+  success: "success",
+  doge: "doge",
+  stonks: "stonks",
+  "expanding brain": "gb",
+  "galaxy brain": "gb",
+  brain: "gb",
+};
+
+function memeTemplate(format?: string | null): string {
+  const k = (format || "").toLowerCase().trim();
+  if (MEME_TEMPLATES[k]) return MEME_TEMPLATES[k];
+  for (const key of Object.keys(MEME_TEMPLATES)) if (k.includes(key)) return MEME_TEMPLATES[key];
+  return "drake";
+}
+
+function encodeMemeText(s?: string | null): string {
+  const t = (s || "").trim();
+  if (!t) return "_";
+  const escaped = t
+    .replace(/_/g, "__")
+    .replace(/-/g, "--")
+    .replace(/ /g, "_")
+    .replace(/\?/g, "~q")
+    .replace(/&/g, "~a")
+    .replace(/%/g, "~p")
+    .replace(/#/g, "~h")
+    .replace(/\//g, "~s")
+    .replace(/"/g, "''");
+  return encodeURIComponent(escaped).replace(/%7E/g, "~");
+}
+
+export function memeImageUrl(
+  format: string | null | undefined,
+  top: string | null | undefined,
+  bottom: string | null | undefined,
+): string {
+  return `https://api.memegen.link/images/${memeTemplate(format)}/${encodeMemeText(top)}/${encodeMemeText(bottom)}.png`;
+}
+
 export function categoryStyle(name?: string | null): CategoryStyle {
   if (!name) return FALLBACKS[0];
   const key = name.toLowerCase();

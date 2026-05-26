@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { safe } from "@/lib/safe";
-import { categoryStyle } from "@/lib/ui";
+import { categoryStyle, memeImageUrl } from "@/lib/ui";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
@@ -41,24 +41,14 @@ export default async function MemesPage() {
                 key={m.id}
                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
               >
-                {m.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.imageUrl} alt={m.title} className="aspect-square w-full object-cover" />
-                ) : (
-                  <div
-                    className={`flex aspect-square flex-col items-center justify-between gap-2 bg-gradient-to-br ${c.gradient} p-5 text-center`}
-                  >
-                    <p className="break-words text-sm font-black uppercase leading-tight text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.45)] sm:text-base">
-                      {m.topText}
-                    </p>
-                    <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/70">
-                      {m.format}
-                    </span>
-                    <p className="break-words text-sm font-black uppercase leading-tight text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.45)] sm:text-base">
-                      {m.bottomText}
-                    </p>
-                  </div>
-                )}
+                {/* Real classic-meme image (memegen.link) with the text baked in. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={m.imageUrl || memeImageUrl(m.format, m.topText, m.bottomText)}
+                  alt={m.title}
+                  loading="lazy"
+                  className="aspect-square w-full bg-slate-100 object-contain dark:bg-slate-800"
+                />
                 <figcaption className="p-4">
                   {m.category && (
                     <span
