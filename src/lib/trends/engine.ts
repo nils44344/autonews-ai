@@ -108,6 +108,15 @@ export async function runTrendCycle(): Promise<{ topics: number; signals: number
 
   let topicCount = 0;
 
+  // Fetch the recent-topics dedup window ONCE before the loop (it used to be
+  // re-queried for every cluster — the dominant cost of a cycle). New topics are
+  // appended in-memory so later clusters still dedupe against them.
+  const recent = await prisma.trendTopic.findMany({
+    where: { createdAt: { gte: new Date(now - 1000 * 60 * 60 * 24) } },
+    select: { id: true, title: true, slug: true },
+    take: 500,
+  });
+
   for (const cluster of clusters) {
     // Single-source, low-popularity noise: skip to keep the pipeline focused.
     const distinctSources = new Set(cluster.signals.map((s) => s.source.id)).size;
@@ -129,34 +138,33 @@ export async function runTrendCycle(): Promise<{ topics: number; signals: number
     });
 
     // Merge into an existing recent topic if the title is similar, else create.
-    const recent = await prisma.trendTopic.findMany({
-      where: { createdAt: { gte: new Date(now - 1000 * 60 * 60 * 24) } },
-      select: { id: true, title: true, slug: true },
-      take: 200,
-    });
     const match = recent.find((t) => similarity(t.title, cluster.title) > SIMILARITY_THRESHOLD);
 
-    const topic = match
-      ? await prisma.trendTopic.update({
-          where: { id: match.id },
-          data: {
-            sourceCount: distinctSources,
-            keywords,
-            ...scores,
-            updatedAt: new Date(),
-          },
-        })
-      : await prisma.trendTopic.create({
-          data: {
-            title: cluster.title.slice(0, 200),
-            slug: uniqueSlug(cluster.title),
-            category: cluster.category,
-            keywords,
-            sourceCount: distinctSources,
-            status: "RANKED",
-            ...scores,
-          },
-        });
+    let topic;
+    if (match) {
+      topic = await prisma.trendTopic.update({
+        where: { id: match.id },
+        data: {
+          sourceCount: distinctSources,
+          keywords,
+          ...scores,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      topic = await prisma.trendTopic.create({
+        data: {
+          title: cluster.title.slice(0, 200),
+          slug: uniqueSlug(cluster.title),
+          category: cluster.category,
+          keywords,
+          sourceCount: distinctSources,
+          status: "RANKED",
+          ...scores,
+        },
+      });
+      recent.push({ id: topic.id, title: topic.title, slug: topic.slug });
+    }
 
     // Persist the raw signals linked to this topic.
     await prisma.trendSignal.createMany({

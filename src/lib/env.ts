@@ -34,6 +34,11 @@ const schema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().default("claude-haiku-4-5-20251001"),
 
+  // Email (Resend). Without a verified domain, Resend test mode only delivers to
+  // your own account email and must send from onboarding@resend.dev.
+  RESEND_API_KEY: z.string().optional(),
+  NEWSLETTER_FROM: z.string().default("AutoNews AI <onboarding@resend.dev>"),
+
   REDDIT_USER_AGENT: z.string().default("autonews-ai/0.1"),
   NEWSAPI_KEY: z.string().optional(),
   YOUTUBE_API_KEY: z.string().optional(),

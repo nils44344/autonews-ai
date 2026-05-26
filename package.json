@@ -17,6 +17,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "trends:once": "tsx scripts/run-trends-once.ts",
+    "digest": "tsx scripts/send-digest.ts",
     "typecheck": "tsc --noEmit"
   },
   "prisma": {
