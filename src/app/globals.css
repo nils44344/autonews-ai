@@ -21,6 +21,10 @@ body {
 /* Lightweight prose styles for rendered article markdown (no plugin needed). */
 .prose {
   @apply text-[1.075rem] leading-8 text-slate-700;
+  overflow-wrap: break-word;
+}
+.prose pre {
+  @apply my-5 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
 }
 .prose h2 {
   @apply mt-12 mb-4 font-serif text-2xl font-bold tracking-tight text-ink;

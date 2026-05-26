@@ -99,7 +99,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </span>
       )}
 
-      <h1 className="mt-3 font-serif text-4xl font-extrabold leading-tight tracking-tight text-ink">
+      <h1 className="mt-3 break-words font-serif text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
         {a.title}
       </h1>
       {a.dek && <p className="mt-4 text-xl leading-relaxed text-slate-600">{a.dek}</p>}

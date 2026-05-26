@@ -46,12 +46,12 @@ export default async function HomePage() {
         >
           <div className={`absolute inset-0 bg-gradient-to-br ${leadStyle.gradient}`} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          <div className="relative p-8 text-white">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur">
+          <div className="relative p-6 text-white sm:p-8">
+            <span className="inline-flex flex-wrap items-center gap-x-2 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wide backdrop-blur sm:text-xs">
               ★ Top Story
               {lead.category && <span className="opacity-80">· {lead.category.name}</span>}
             </span>
-            <h1 className="mt-4 font-serif text-3xl font-extrabold leading-tight drop-shadow-sm md:text-4xl">
+            <h1 className="mt-4 break-words font-serif text-[1.6rem] font-extrabold leading-tight drop-shadow-sm sm:text-3xl md:text-4xl">
               {lead.title}
             </h1>
             {lead.dek && (

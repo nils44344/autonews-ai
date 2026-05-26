@@ -29,22 +29,24 @@ export function NewsletterForm() {
     );
 
   return (
-    <form onSubmit={submit} className="flex gap-2">
+    <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
       <input
         type="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
-        className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        className="w-full flex-1 rounded-lg border border-white/20 bg-white px-4 py-2.5 text-sm text-ink outline-none focus:ring-2 focus:ring-brand"
       />
       <button
         disabled={state === "loading"}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="shrink-0 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
       >
         {state === "loading" ? "…" : "Subscribe"}
       </button>
-      {state === "error" && <span className="text-sm text-red-600">Try again</span>}
+      {state === "error" && (
+        <span className="text-sm text-red-300 sm:self-center">Try again</span>
+      )}
     </form>
   );
 }

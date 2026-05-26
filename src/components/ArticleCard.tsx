@@ -32,7 +32,7 @@ export function ArticleCard({ a }: { a: CardArticle }) {
           <span className="text-slate-400">{a.readingMin} min read</span>
         </div>
 
-        <h3 className="font-serif text-lg font-bold leading-snug text-ink transition group-hover:text-brand">
+        <h3 className="break-words font-serif text-lg font-bold leading-snug text-ink transition group-hover:text-brand">
           <Link href={href} className="hover:underline">
             {a.title}
           </Link>

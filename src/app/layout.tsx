@@ -41,21 +41,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="h-1 w-full bg-gradient-to-r from-brand via-indigo-500 to-fuchsia-500" />
           <div className="border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-              <Link href="/" className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink font-serif text-lg font-black text-white">
+              <Link href="/" className="flex shrink-0 items-center gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink font-serif text-base font-black text-white sm:h-9 sm:w-9 sm:text-lg">
                   A
                 </span>
-                <span className="font-serif text-xl font-bold tracking-tight text-ink">
+                <span className="whitespace-nowrap font-serif text-lg font-bold tracking-tight text-ink sm:text-xl">
                   {env.SITE_NAME}
                 </span>
               </Link>
 
-              <nav className="flex items-center gap-1 text-sm font-medium">
+              <nav className="flex shrink-0 items-center gap-0.5 text-sm font-medium sm:gap-1">
                 {nav.map((n) => (
                   <Link
                     key={n.href}
                     href={n.href}
-                    className="rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-ink"
+                    className="rounded-full px-2.5 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-ink sm:px-3"
                   >
                     {n.label}
                   </Link>
