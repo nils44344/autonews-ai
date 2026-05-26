@@ -1,0 +1,38 @@
+name: Content cycle
+
+# Runs in GitHub's cloud on a schedule — no PC required.
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours (UTC)
+  workflow_dispatch: {} # allow manual "Run workflow" from the Actions tab
+
+concurrency:
+  group: content-cycle
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Non-secret config (safe to hardcode):
+      AI_PROVIDER: openai
+      OPENAI_BASE_URL: https://api.groq.com/openai/v1
+      OPENAI_MODEL: llama-3.1-8b-instant
+      SITE_URL: https://autonews-ai.live
+      INDEXNOW_KEY: 62c4c8064417c5f1b4294781fda5d215
+      PUBLISH_MODE: auto
+      MIN_QUALITY_SCORE: "60"
+      TOPICS_PER_CYCLE: "3"
+      # Secrets (add these in Settings → Secrets and variables → Actions):
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run trends:once

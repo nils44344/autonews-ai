@@ -1,0 +1,25 @@
+name: Daily email digest
+
+on:
+  schedule:
+    - cron: "30 2 * * *" # ~08:00 IST (02:30 UTC) daily
+  workflow_dispatch: {}
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE_URL: https://autonews-ai.live
+      NEWSLETTER_FROM: "AutoNews AI <news@autonews-ai.live>"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run digest
