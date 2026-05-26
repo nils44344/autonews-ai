@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { renderMarkdown } from "@/lib/markdown";
+import { categoryStyle } from "@/lib/ui";
 import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, ldScript } from "@/lib/seo/schema";
 
 export const revalidate = 300;
@@ -53,9 +54,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const url = `${env.SITE_URL}/article/${a.slug}`;
   const faq = (a.faq as { question: string; answer: string }[] | null) ?? [];
   const sources = (a.sources as { title: string; url: string }[] | null) ?? [];
+  const c = categoryStyle(a.category?.name);
 
   return (
-    <article className="mx-auto max-w-3xl">
+    <article className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60 md:p-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -80,23 +82,43 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         }}
       />
 
-      <nav className="text-xs text-slate-500 mb-3">
-        <Link href="/" className="hover:text-brand">Home</Link>
-        {a.category && <span> / {a.category.name}</span>}
+      <nav className="mb-4 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+        <Link href="/" className="hover:text-brand">
+          Home
+        </Link>
+        <span>/</span>
+        <span className="text-slate-700">{a.category?.name ?? "News"}</span>
       </nav>
 
-      <h1 className="text-4xl font-extrabold leading-tight">{a.title}</h1>
-      {a.dek && <p className="mt-3 text-xl text-slate-600">{a.dek}</p>}
-      <div className="mt-4 flex items-center gap-3 text-sm text-slate-500 border-b border-slate-200 pb-4">
-        <span>{a.readingMin} min read</span>
-        {a.publishedAt && <span>· {new Date(a.publishedAt).toLocaleDateString()}</span>}
-        <span>· {a.wordCount} words</span>
+      {a.category && (
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${c.badge}`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+          {a.category.name}
+        </span>
+      )}
+
+      <h1 className="mt-3 font-serif text-4xl font-extrabold leading-tight tracking-tight text-ink">
+        {a.title}
+      </h1>
+      {a.dek && <p className="mt-4 text-xl leading-relaxed text-slate-600">{a.dek}</p>}
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 pb-5 text-sm text-slate-500">
+        <span className="font-semibold text-slate-700">{a.readingMin} min read</span>
+        {a.publishedAt && (
+          <span>
+            ·{" "}
+            {new Date(a.publishedAt).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        )}
+        <span>· {a.wordCount.toLocaleString()} words</span>
       </div>
 
-      <div
-        className="prose mt-6"
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(a.body) }}
-      />
+      <div className="prose mt-8" dangerouslySetInnerHTML={{ __html: renderMarkdown(a.body) }} />
 
       {faq.length > 0 && (
         <section className="mt-12">

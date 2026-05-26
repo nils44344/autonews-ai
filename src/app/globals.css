@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --bg: #ffffff;
-  --fg: #0f172a;
+  --bg: #f8fafc;
+  --fg: #0b1120;
 }
 
 html {
@@ -15,27 +15,50 @@ body {
   background: var(--bg);
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* Lightweight prose styles for rendered article markdown (no plugin needed). */
+.prose {
+  @apply text-[1.075rem] leading-8 text-slate-700;
+}
 .prose h2 {
-  @apply mt-10 mb-3 text-2xl font-bold tracking-tight;
+  @apply mt-12 mb-4 font-serif text-2xl font-bold tracking-tight text-ink;
 }
 .prose h3 {
-  @apply mt-8 mb-2 text-xl font-semibold;
+  @apply mt-8 mb-2 font-serif text-xl font-semibold text-ink;
 }
 .prose p {
-  @apply my-4 leading-relaxed text-slate-700;
+  @apply my-5 leading-8;
+}
+/* Magazine-style drop cap on the opening paragraph. */
+.prose > p:first-of-type::first-letter {
+  @apply float-left mr-3 mt-1 font-serif text-6xl font-bold leading-[0.8] text-brand;
 }
 .prose ul {
-  @apply my-4 list-disc space-y-1 pl-6 text-slate-700;
+  @apply my-5 list-disc space-y-2 pl-6;
 }
 .prose ol {
-  @apply my-4 list-decimal space-y-1 pl-6 text-slate-700;
+  @apply my-5 list-decimal space-y-2 pl-6;
+}
+.prose li {
+  @apply leading-7;
 }
 .prose a {
-  @apply text-brand underline underline-offset-2 hover:text-brand-dark;
+  @apply font-medium text-brand underline underline-offset-2 transition hover:text-brand-dark;
+}
+.prose strong {
+  @apply font-semibold text-ink;
 }
 .prose blockquote {
-  @apply my-6 border-l-4 border-slate-200 pl-4 italic text-slate-600;
+  @apply my-7 rounded-r-lg border-l-4 border-brand bg-slate-50 py-2 pl-5 pr-4 italic text-slate-600;
+}
+.prose code {
+  @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-800;
+}
+.prose hr {
+  @apply my-10 border-slate-200;
+}
+.prose img {
+  @apply my-6 rounded-xl;
 }

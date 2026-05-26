@@ -7,6 +7,27 @@ import type { RawSignal } from "./types";
 
 const SIMILARITY_THRESHOLD = 0.42;
 
+// Hard cap per source. Without this, one slow/hanging feed makes the whole
+// Promise.all wait minutes (trend collection used to take ~15 min). Now the
+// cycle finishes in seconds and simply skips whatever didn't answer in time.
+const SOURCE_TIMEOUT_MS = 9000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`source timeout after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 interface Cluster {
   title: string;
   category: string;
@@ -22,13 +43,16 @@ export async function collectSignals(): Promise<{ signal: RawSignal; source: Sou
     sources.map(async (source) => {
       try {
         const fetcher = getFetcher(source.type);
-        const signals = await fetcher.fetch({
-          type: source.type,
-          name: source.name,
-          url: source.url ?? undefined,
-          category: source.category,
-          weight: source.weight,
-        });
+        const signals = await withTimeout(
+          fetcher.fetch({
+            type: source.type,
+            name: source.name,
+            url: source.url ?? undefined,
+            category: source.category,
+            weight: source.weight,
+          }),
+          SOURCE_TIMEOUT_MS,
+        );
         for (const signal of signals) collected.push({ signal, source });
 
         await prisma.source.update({
