@@ -120,6 +120,17 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <span>· {a.wordCount.toLocaleString()} words</span>
       </div>
 
+      {a.excerpt && (
+        <aside className="mt-6 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/5 to-fuchsia-500/5 p-5 dark:border-brand/30 dark:from-brand/10 dark:to-fuchsia-500/10">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-brand">
+            ⚡ Quick read
+          </p>
+          <p className="text-base font-medium leading-relaxed text-slate-700 dark:text-slate-200">
+            {a.excerpt}
+          </p>
+        </aside>
+      )}
+
       <div className="prose mt-8" dangerouslySetInnerHTML={{ __html: renderMarkdown(a.body) }} />
 
       {faq.length > 0 && (

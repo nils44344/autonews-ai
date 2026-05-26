@@ -13,11 +13,11 @@ const serif = Lora({ subsets: ["latin"], variable: "--font-serif", display: "swa
 export const metadata: Metadata = {
   metadataBase: new URL(env.SITE_URL),
   title: {
-    default: `${env.SITE_NAME} — AI-powered breaking news & analysis`,
+    default: `${env.SITE_NAME} — India's tech, startup & business news`,
     template: `%s | ${env.SITE_NAME}`,
   },
   description:
-    "Automated, SEO-optimized coverage of trending news across tech, AI, business, crypto, sports and entertainment.",
+    "India's AI-powered newsroom: the latest in Indian tech, startups, AI, markets and business — fast, clear, and free.",
   openGraph: { type: "website", siteName: env.SITE_NAME, url: env.SITE_URL },
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
@@ -58,8 +58,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <span className="font-serif text-lg font-bold text-white">{env.SITE_NAME}</span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed">
-                  Breaking news and analysis across tech, AI, business and culture — written by
-                  AI, refreshed around the clock.
+                  India&apos;s AI-powered newsroom — tech, startups, AI, markets and business,
+                  refreshed around the clock.
                 </p>
               </div>
               <nav className="flex flex-col gap-2 text-sm">
