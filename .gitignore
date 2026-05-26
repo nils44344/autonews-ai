@@ -16,3 +16,7 @@ coverage/
 prisma/*.db
 prisma/*.db-journal
 next-env.d.ts
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+*.tsbuildinfo
