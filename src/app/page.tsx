@@ -8,7 +8,7 @@ import { NewsletterForm } from "@/components/NewsletterForm";
 export const revalidate = 120; // ISR: refresh the homepage every 2 minutes
 
 export default async function HomePage() {
-  const [latest, trending] = await Promise.all([
+  const [latest, popular] = await Promise.all([
     safe(
       prisma.article.findMany({
         where: { status: "PUBLISHED", type: "NEWS" },
@@ -18,11 +18,13 @@ export default async function HomePage() {
       }),
       [],
     ),
+    // Most-read published articles — real, clickable links (not raw trend topics).
     safe(
-      prisma.trendTopic.findMany({
-        where: { status: { in: ["RANKED", "SELECTED", "GENERATED", "PUBLISHED"] } },
-        orderBy: { finalScore: "desc" },
-        take: 6,
+      prisma.article.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
+        take: 7,
+        select: { id: true, slug: true, title: true, type: true },
       }),
       [],
     ),
@@ -30,6 +32,7 @@ export default async function HomePage() {
 
   const [lead, ...rest] = latest;
   const leadStyle = categoryStyle(lead?.category?.name);
+  const trending = popular.filter((p) => p.id !== lead?.id).slice(0, 6);
 
   if (!lead) return <EmptyState />;
 
@@ -70,13 +73,20 @@ export default async function HomePage() {
             <span className="h-4 w-1 rounded-full bg-brand" />
             Trending now
           </h2>
-          <ol className="mt-4 space-y-4">
+          <ol className="mt-3 space-y-1">
             {trending.map((t, i) => (
-              <li key={t.id} className="flex gap-3">
-                <span className="font-serif text-2xl font-black leading-none text-slate-200">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="text-sm font-medium leading-snug text-slate-700">{t.title}</span>
+              <li key={t.id}>
+                <Link
+                  href={`${t.type === "BLOG" ? "/blog" : "/article"}/${t.slug}`}
+                  className="group -mx-2 flex gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-50"
+                >
+                  <span className="font-serif text-2xl font-black leading-none text-slate-200 transition group-hover:text-brand/40">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm font-medium leading-snug text-slate-700 transition group-hover:text-brand">
+                    {t.title}
+                  </span>
+                </Link>
               </li>
             ))}
           </ol>

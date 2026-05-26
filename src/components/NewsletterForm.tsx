@@ -22,7 +22,11 @@ export function NewsletterForm() {
   }
 
   if (state === "done")
-    return <p className="text-sm text-green-700">Thanks — check your inbox to confirm.</p>;
+    return (
+      <p className="text-sm font-medium text-green-300">
+        ✓ You&apos;re on the list — thanks for subscribing!
+      </p>
+    );
 
   return (
     <form onSubmit={submit} className="flex gap-2">
