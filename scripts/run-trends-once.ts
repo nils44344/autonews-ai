@@ -21,12 +21,32 @@ async function main() {
     try {
       const article = await writeNewsArticle(topic.id);
       const qa = await assessArticle(article.id);
-      console.log(`  ✓ "${article.title}" (QA ${qa.finalScore})`);
+      console.log(`  article "${article.title}" → QA ${qa.finalScore}`);
 
       if (qa.finalScore >= env.MIN_QUALITY_SCORE) {
         await publishArticle(article.id);
-        await generateBlogCluster(article.id);
+        console.log(`    ✓ published`);
+
+        // Generate the supporting blog cluster AND assess + publish each post.
+        // (This was the bug: posts were created but never assessed/published.)
+        const posts = await generateBlogCluster(article.id);
+        for (const post of posts) {
+          try {
+            const pqa = await assessArticle(post.id);
+            if (pqa.finalScore >= env.MIN_QUALITY_SCORE) {
+              await publishArticle(post.id);
+              console.log(`    ✓ blog "${post.title}" (QA ${pqa.finalScore})`);
+            } else {
+              console.log(`    – blog "${post.title}" below bar (QA ${pqa.finalScore})`);
+            }
+          } catch (e) {
+            console.error(`    ✗ blog "${post.title}":`, (e as Error).message);
+          }
+        }
+      } else {
+        console.log(`    – below quality bar, not published`);
       }
+
       await generateMeme(topic.id);
     } catch (e) {
       console.error(`  ✗ ${topic.title}:`, (e as Error).message);

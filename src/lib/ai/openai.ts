@@ -13,6 +13,10 @@ export class OpenAIProvider implements LLMProvider {
     this.client = new OpenAI({
       apiKey: env.OPENAI_API_KEY,
       ...(env.OPENAI_BASE_URL ? { baseURL: env.OPENAI_BASE_URL } : {}),
+      // Groq's free tier rate-limits under bursts; retry 429/5xx with backoff
+      // (respects Retry-After) so a cycle doesn't strand half-written articles.
+      maxRetries: 5,
+      timeout: 90_000,
     });
   }
 
