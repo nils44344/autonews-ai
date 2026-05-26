@@ -1,0 +1,31 @@
+# Render Blueprint — free Node web service (no per-deploy charge; Prisma + all
+# code run unchanged). Secrets (DATABASE_URL, ADMIN_TOKEN) are filled in the
+# Render dashboard. Content generation stays on GitHub Actions → Neon.
+services:
+  - type: web
+    name: autonews-ai
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: SITE_URL
+        value: https://autonews-ai.live
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: OPENAI_MODEL
+        value: llama-3.1-8b-instant
+      - key: INDEXNOW_KEY
+        value: 62c4c8064417c5f1b4294781fda5d215
+      - key: PUBLISH_MODE
+        value: auto
+      - key: MIN_QUALITY_SCORE
+        value: "60"
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
