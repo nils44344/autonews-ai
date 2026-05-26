@@ -27,7 +27,7 @@ export default async function AdminDashboard() {
     topics,
     sources,
     recentJobs,
-    memeCount,
+    blogCount,
     subscribers,
     revenue,
     totalViews,
@@ -43,7 +43,7 @@ export default async function AdminDashboard() {
     prisma.trendTopic.findMany({ orderBy: { finalScore: "desc" }, take: 12 }),
     prisma.source.findMany({ orderBy: { name: "asc" } }),
     prisma.jobLog.findMany({ orderBy: { createdAt: "desc" }, take: 15 }),
-    prisma.meme.count({ where: { status: "PUBLISHED" } }),
+    prisma.article.count({ where: { status: "PUBLISHED", type: "BLOG" } }),
     prisma.newsletterSubscriber.count(),
     prisma.dailyStat.aggregate({ _sum: { adRevenueCents: true, affiliateCents: true } }),
     prisma.article.aggregate({ _sum: { views: true } }),
@@ -68,7 +68,7 @@ export default async function AdminDashboard() {
         <Stat label="Published" value={publishedCount} />
         <Stat label="In review" value={reviewQueue.length} />
         <Stat label="Pipeline" value={draftCount} sub="drafts + scheduled" />
-        <Stat label="Memes" value={memeCount} />
+        <Stat label="Blogs" value={blogCount} />
         <Stat label="Page views" value={totalViews._sum.views ?? 0} />
         <Stat label="Revenue" value={`$${revenueUsd}`} sub="ads + affiliate" />
       </section>

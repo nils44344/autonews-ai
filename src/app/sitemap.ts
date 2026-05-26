@@ -18,7 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: env.SITE_URL, changeFrequency: "hourly", priority: 1 },
     { url: `${env.SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8 },
-    { url: `${env.SITE_URL}/memes`, changeFrequency: "daily", priority: 0.5 },
   ];
 
   const dynamic: MetadataRoute.Sitemap = articles.map((a) => ({

@@ -11,6 +11,20 @@ function lengthFor(topic: TrendTopic): { min: number; max: number } {
   return { min: 2000, max: 4000 }; // evergreen / deep coverage
 }
 
+// Hard news (an event/announcement) → NEWS section. Evergreen/explainer/opinion
+// topics → BLOG. Keeps the news section to actual news; analysis lives in blog.
+const NEWS_EVENT = /\b(raises?|raised|funding|launch(es|ed)?|announce[sd]?|acquire[sd]?|merger|partners?|appoints?|resigns?|steps? down|dies?|died|passes? away|files?|ipo|lists?|listing|surges?|plunges?|falls?|jumps?|drops?|hits?|posts?|reports?|results?|earnings|revenue|profit|wins?|bans?|banned|approve[sd]?|fine[sd]?|unveils?|secures?|valuation|valued|layoffs?|shut(s|down)?|expands?|backs?|invest(s|ed)?|stake|deal|q[1-4]\b|crore|lakh|billion|million|sensex|nifty|rbi|sebi|launches|recalls?|sues?|hikes?|slumps?|rallies)\b/i;
+const EXPLAINER = /\b(how to|what is|guide|explained?|explainer|best |top \d|vs\.?|versus|tips|why you|everything you|ultimate|beginners?|tutorial|review|comparison|should you|things to)\b/i;
+
+function classifyType(topic: TrendTopic): "NEWS" | "BLOG" {
+  const t = topic.title.toLowerCase();
+  if (EXPLAINER.test(t)) return "BLOG";
+  if (topic.isBreaking || NEWS_EVENT.test(t)) return "NEWS";
+  // Multi-source, fresh items off news feeds are almost always events → NEWS;
+  // low-signal lone items read more like evergreen explainers → BLOG.
+  return topic.sourceCount >= 2 ? "NEWS" : "BLOG";
+}
+
 async function ensureCategory(name: string, kind = "news") {
   const slugified = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   return prisma.category.upsert({
@@ -33,6 +47,7 @@ export async function writeNewsArticle(topicId: string) {
     .map((s) => `- ${s.title}${s.summary ? `: ${s.summary}` : ""}${s.url ? ` (${s.url})` : ""}`)
     .join("\n");
   const { min, max } = lengthFor(topic);
+  const articleType = classifyType(topic);
 
   const raw = await generateJSON(
     newsArticlePrompt({
@@ -42,7 +57,7 @@ export async function writeNewsArticle(topicId: string) {
       context,
       minWords: min,
       maxWords: max,
-      type: "NEWS",
+      type: articleType,
     }),
     { system: HOUSE_STYLE, temperature: 0.7, maxTokens: 4096 },
   );
@@ -53,7 +68,7 @@ export async function writeNewsArticle(topicId: string) {
 
   const article = await prisma.article.create({
     data: {
-      type: "NEWS",
+      type: articleType,
       status: "DRAFT",
       title: parsed.title,
       slug: uniqueSlug(parsed.title),
@@ -71,7 +86,7 @@ export async function writeNewsArticle(topicId: string) {
       readingMin: readingMinutes(parsed.body),
       categoryId: category.id,
       topicId: topic.id,
-      isPillar: true,
+      isPillar: articleType === "NEWS",
       clusterId: topic.id, // the news piece is the hub of its cluster
     },
   });

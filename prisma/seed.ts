@@ -2,62 +2,68 @@ import { PrismaClient, type SourceType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// All sources below are free and key-free (RSS / Reddit / HN / Google Trends).
-// NewsAPI / YouTube / X sources activate automatically once you add their keys.
+// India-first, tech/startup/business-led sources. All free + key-free
+// (RSS / Reddit / Google News / Google Trends). Google News India queries are
+// the most reliable feeds; Indian outlets add depth; a few global tech feeds at
+// low weight catch India-relevant global stories. Dead feeds are skipped
+// gracefully (9s per-source timeout in the trend engine).
+const gnews = (q: string) =>
+  `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-IN&gl=IN&ceid=IN:en`;
+
 const sources: { type: SourceType; name: string; url?: string; category: string; weight: number }[] = [
-  // ── Google Trends (daily trending searches by geo) ──
-  { type: "GOOGLE_TRENDS", name: "Google Trends US", url: "US", category: "general", weight: 1.4 },
+  // ── Google Trends (India) ──
+  { type: "GOOGLE_TRENDS", name: "Google Trends India", url: "IN", category: "india", weight: 1.2 },
 
-  // ── Google News RSS queries ──
-  { type: "GOOGLE_NEWS", name: "Google News — Technology", url: "https://news.google.com/rss/search?q=technology&hl=en-US&gl=US&ceid=US:en", category: "tech", weight: 1.2 },
-  { type: "GOOGLE_NEWS", name: "Google News — AI", url: "https://news.google.com/rss/search?q=artificial+intelligence&hl=en-US&gl=US&ceid=US:en", category: "ai", weight: 1.3 },
-  { type: "GOOGLE_NEWS", name: "Google News — Business", url: "https://news.google.com/rss/search?q=business&hl=en-US&gl=US&ceid=US:en", category: "business", weight: 1.1 },
+  // ── Google News India — the core, reliable feeds (tech/startup/business) ──
+  { type: "GOOGLE_NEWS", name: "GNews — Indian Startups", url: gnews("Indian startup funding"), category: "startups", weight: 1.5 },
+  { type: "GOOGLE_NEWS", name: "GNews — India Tech", url: gnews("India technology"), category: "tech", weight: 1.4 },
+  { type: "GOOGLE_NEWS", name: "GNews — AI India", url: gnews("artificial intelligence India"), category: "ai", weight: 1.4 },
+  { type: "GOOGLE_NEWS", name: "GNews — Indian Markets", url: gnews("Sensex Nifty Indian stock market"), category: "markets", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — India Business", url: gnews("India business economy"), category: "business", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — Fintech India", url: gnews("fintech India UPI"), category: "business", weight: 1.2 },
+  { type: "GOOGLE_NEWS", name: "GNews — Indian IT", url: gnews("India IT companies Infosys TCS"), category: "tech", weight: 1.1 },
+  { type: "GOOGLE_NEWS", name: "GNews — India Top", url: gnews("India top news"), category: "india", weight: 1.0 },
 
-  // ── Tech / AI blogs (RSS) ──
-  { type: "RSS", name: "TechCrunch", url: "https://techcrunch.com/feed/", category: "tech", weight: 1.2 },
-  { type: "RSS", name: "The Verge", url: "https://www.theverge.com/rss/index.xml", category: "tech", weight: 1.2 },
-  { type: "RSS", name: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/index", category: "tech", weight: 1.1 },
-  { type: "RSS", name: "VentureBeat AI", url: "https://venturebeat.com/category/ai/feed/", category: "ai", weight: 1.2 },
-  { type: "RSS", name: "MIT Tech Review", url: "https://www.technologyreview.com/feed/", category: "ai", weight: 1.2 },
+  // ── Indian startup / tech outlets (RSS) ──
+  { type: "RSS", name: "YourStory", url: "https://yourstory.com/feed", category: "startups", weight: 1.4 },
+  { type: "RSS", name: "Inc42", url: "https://inc42.com/feed/", category: "startups", weight: 1.4 },
+  { type: "RSS", name: "Moneycontrol — Tech", url: "https://www.moneycontrol.com/rss/technology.xml", category: "tech", weight: 1.2 },
+  { type: "RSS", name: "Moneycontrol — Business", url: "https://www.moneycontrol.com/rss/business.xml", category: "business", weight: 1.2 },
+  { type: "RSS", name: "Livemint — Technology", url: "https://www.livemint.com/rss/technology", category: "tech", weight: 1.2 },
+  { type: "RSS", name: "Livemint — Companies", url: "https://www.livemint.com/rss/companies", category: "business", weight: 1.1 },
+  { type: "RSS", name: "ET — Tech", url: "https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms", category: "tech", weight: 1.2 },
+  { type: "RSS", name: "Business Standard", url: "https://www.business-standard.com/rss/home_page_top_stories.rss", category: "business", weight: 1.0 },
+  { type: "RSS", name: "Indian Express — Tech", url: "https://indianexpress.com/section/technology/feed/", category: "tech", weight: 1.1 },
+  { type: "RSS", name: "Gadgets 360", url: "https://feeds.feedburner.com/gadgets360-latest", category: "tech", weight: 1.0 },
+  { type: "RSS", name: "NDTV — Top Stories", url: "https://feeds.feedburner.com/ndtvnews-top-stories", category: "india", weight: 0.9 },
 
-  // ── Business / finance ──
-  { type: "RSS", name: "CNBC Business", url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147", category: "business", weight: 1.0 },
+  // ── Reddit India (public JSON, no key) ──
+  { type: "REDDIT", name: "r/india", url: "india", category: "india", weight: 1.0 },
+  { type: "REDDIT", name: "r/IndianStreetBets", url: "IndianStreetBets", category: "markets", weight: 1.1 },
+  { type: "REDDIT", name: "r/developersIndia", url: "developersIndia", category: "tech", weight: 1.0 },
+  { type: "REDDIT", name: "r/StartUpIndia", url: "StartUpIndia", category: "startups", weight: 1.1 },
 
-  // ── Crypto ──
-  { type: "RSS", name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/", category: "crypto", weight: 1.1 },
-  { type: "RSS", name: "Cointelegraph", url: "https://cointelegraph.com/rss", category: "crypto", weight: 1.0 },
-
-  // ── Sports ──
-  { type: "RSS", name: "ESPN Top", url: "https://www.espn.com/espn/rss/news", category: "sports", weight: 1.0 },
-
-  // ── Entertainment ──
-  { type: "RSS", name: "Variety", url: "https://variety.com/feed/", category: "entertainment", weight: 0.9 },
-
-  // ── Hacker News ──
-  { type: "HACKERNEWS", name: "Hacker News Top", url: "topstories", category: "tech", weight: 1.1 },
-
-  // ── Reddit (public JSON, no key) ──
-  { type: "REDDIT", name: "r/technology", url: "technology", category: "tech", weight: 1.0 },
-  { type: "REDDIT", name: "r/artificial", url: "artificial", category: "ai", weight: 1.1 },
-  { type: "REDDIT", name: "r/CryptoCurrency", url: "CryptoCurrency", category: "crypto", weight: 0.9 },
-  { type: "REDDIT", name: "r/worldnews", url: "worldnews", category: "general", weight: 1.0 },
-  { type: "REDDIT", name: "r/sports", url: "sports", category: "sports", weight: 0.8 },
+  // ── Global tech (India-relevant), low weight so India stays the majority ──
+  { type: "RSS", name: "TechCrunch", url: "https://techcrunch.com/feed/", category: "tech", weight: 0.7 },
+  { type: "HACKERNEWS", name: "Hacker News Top", url: "topstories", category: "tech", weight: 0.7 },
 ];
 
 const categories = [
   { name: "Technology", slug: "tech", kind: "news" },
-  { name: "Artificial Intelligence", slug: "ai", kind: "news" },
+  { name: "Startups", slug: "startups", kind: "news" },
+  { name: "AI", slug: "ai", kind: "news" },
   { name: "Business", slug: "business", kind: "news" },
-  { name: "Cryptocurrency", slug: "crypto", kind: "news" },
-  { name: "Sports", slug: "sports", kind: "news" },
-  { name: "Entertainment", slug: "entertainment", kind: "news" },
-  { name: "General", slug: "general", kind: "news" },
+  { name: "Markets", slug: "markets", kind: "news" },
+  { name: "India", slug: "india", kind: "news" },
   { name: "Blog", slug: "blog", kind: "blog" },
 ];
 
 async function main() {
+  // Disable any previously-seeded (non-Indian) sources so they stop being fetched.
+  await prisma.source.updateMany({ data: { enabled: false } });
+
   for (const c of categories) {
-    await prisma.category.upsert({ where: { slug: c.slug }, update: {}, create: c });
+    await prisma.category.upsert({ where: { slug: c.slug }, update: { name: c.name }, create: c });
   }
   for (const s of sources) {
     await prisma.source.upsert({
@@ -66,7 +72,7 @@ async function main() {
       create: { ...s },
     });
   }
-  console.log(`Seeded ${categories.length} categories and ${sources.length} sources.`);
+  console.log(`Seeded ${categories.length} categories and ${sources.length} India-first sources.`);
 }
 
 main()
