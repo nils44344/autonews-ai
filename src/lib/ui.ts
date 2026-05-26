@@ -33,32 +33,60 @@ const FALLBACKS: CategoryStyle[] = [
 // ── Memes ────────────────────────────────────────────────────────────────────
 // Render real classic-meme images via memegen.link (free, no API key). Map the
 // AI's free-text "format" to a verified memegen template id; fall back to drake.
-const MEME_TEMPLATES: Record<string, string> = {
-  "distracted boyfriend": "db",
-  db: "db",
+// ONLY 2-line (top/bottom) templates — the AI gives a topText + bottomText, so
+// multi-panel templates (expanding brain = 4 lines, distracted boyfriend = 3)
+// rendered half-empty/broken. These are all verified `lines: 2` on memegen.
+const MEME_POOL = [
+  "drake",
+  "buzz",
+  "aag",
+  "blb",
+  "cheems",
+  "fry",
+  "mordor",
+  "success",
+  "philosoraptor",
+  "grumpycat",
+  "spongebob",
+  "fine",
+  "doge",
+  "oprah",
+  "leo",
+  "morpheus",
+  "disastergirl",
+  "yodawg",
+];
+
+// Honour a specific named format when the AI picks a 2-line one we recognise.
+const MEME_FORMAT_MAP: Record<string, string> = {
   drake: "drake",
   drakeposting: "drake",
-  "two buttons": "ds",
-  "daily struggle": "ds",
-  "two-panel": "ds",
-  "two panel": "ds",
-  "change my mind": "cmm",
   "this is fine": "fine",
-  "one does not simply": "mordor",
-  "success kid": "success",
-  success: "success",
   doge: "doge",
-  stonks: "stonks",
-  "expanding brain": "gb",
-  "galaxy brain": "gb",
-  brain: "gb",
+  "success kid": "success",
+  "one does not simply": "mordor",
+  mordor: "mordor",
+  "ancient aliens": "aag",
+  "bad luck brian": "blb",
+  philosoraptor: "philosoraptor",
+  "futurama fry": "fry",
+  "not sure if": "fry",
+  "grumpy cat": "grumpycat",
+  "mocking spongebob": "spongebob",
+  "disaster girl": "disastergirl",
+  oprah: "oprah",
+  buzz: "buzz",
 };
 
-function memeTemplate(format?: string | null): string {
+function memeTemplate(format: string | null | undefined, seed: string): string {
   const k = (format || "").toLowerCase().trim();
-  if (MEME_TEMPLATES[k]) return MEME_TEMPLATES[k];
-  for (const key of Object.keys(MEME_TEMPLATES)) if (k.includes(key)) return MEME_TEMPLATES[key];
-  return "drake";
+  if (MEME_FORMAT_MAP[k]) return MEME_FORMAT_MAP[k];
+  for (const key of Object.keys(MEME_FORMAT_MAP)) if (k.includes(key)) return MEME_FORMAT_MAP[key];
+  // Unknown / multi-panel format → deterministically pick a 2-line template from
+  // the pool (stable per meme, varied across memes).
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return MEME_POOL[h % MEME_POOL.length];
 }
 
 function encodeMemeText(s?: string | null): string {
@@ -82,7 +110,8 @@ export function memeImageUrl(
   top: string | null | undefined,
   bottom: string | null | undefined,
 ): string {
-  return `https://api.memegen.link/images/${memeTemplate(format)}/${encodeMemeText(top)}/${encodeMemeText(bottom)}.png`;
+  const seed = `${top ?? ""}|${bottom ?? ""}`;
+  return `https://api.memegen.link/images/${memeTemplate(format, seed)}/${encodeMemeText(top)}/${encodeMemeText(bottom)}.png`;
 }
 
 export function categoryStyle(name?: string | null): CategoryStyle {
