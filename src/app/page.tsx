@@ -68,8 +68,8 @@ export default async function HomePage() {
           </div>
         </Link>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink">
+        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink dark:text-white">
             <span className="h-4 w-1 rounded-full bg-brand" />
             Trending now
           </h2>
@@ -78,12 +78,12 @@ export default async function HomePage() {
               <li key={t.id}>
                 <Link
                   href={`${t.type === "BLOG" ? "/blog" : "/article"}/${t.slug}`}
-                  className="group -mx-2 flex gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-50"
+                  className="group -mx-2 flex gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
-                  <span className="font-serif text-2xl font-black leading-none text-slate-200 transition group-hover:text-brand/40">
+                  <span className="font-serif text-2xl font-black leading-none text-slate-200 transition group-hover:text-brand/40 dark:text-slate-700">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-sm font-medium leading-snug text-slate-700 transition group-hover:text-brand">
+                  <span className="text-sm font-medium leading-snug text-slate-700 transition group-hover:text-brand dark:text-slate-300">
                     {t.title}
                   </span>
                 </Link>
@@ -97,8 +97,8 @@ export default async function HomePage() {
       {rest.length > 0 && (
         <section>
           <div className="mb-5 flex items-center gap-3">
-            <h2 className="font-serif text-2xl font-bold text-ink">Latest News</h2>
-            <span className="h-px flex-1 bg-slate-200" />
+            <h2 className="font-serif text-2xl font-bold text-ink dark:text-white">Latest News</h2>
+            <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((a) => (
@@ -127,9 +127,9 @@ export default async function HomePage() {
 
 function EmptyState() {
   return (
-    <section className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-      <h1 className="font-serif text-2xl font-bold text-ink">No published articles yet</h1>
-      <p className="mx-auto mt-2 max-w-md text-slate-600">
+    <section className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-700 dark:bg-slate-900">
+      <h1 className="font-serif text-2xl font-bold text-ink dark:text-white">No published articles yet</h1>
+      <p className="mx-auto mt-2 max-w-md text-slate-600 dark:text-slate-400">
         The next automated cycle will publish stories here shortly. You can also trigger one from
         the{" "}
         <Link href="/admin" className="font-medium text-brand underline">

@@ -16,7 +16,7 @@ export function ArticleCard({ a }: { a: CardArticle }) {
   const c = categoryStyle(a.category?.name);
   return (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg ${c.ring}`}
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 ${c.ring}`}
     >
       <div className={`h-1.5 w-full bg-gradient-to-r ${c.gradient}`} />
       <div className="flex flex-1 flex-col p-5">
@@ -32,17 +32,19 @@ export function ArticleCard({ a }: { a: CardArticle }) {
           <span className="text-slate-400">{a.readingMin} min read</span>
         </div>
 
-        <h3 className="break-words font-serif text-lg font-bold leading-snug text-ink transition group-hover:text-brand">
+        <h3 className="break-words font-serif text-lg font-bold leading-snug text-ink transition group-hover:text-brand dark:text-white">
           <Link href={href} className="hover:underline">
             {a.title}
           </Link>
         </h3>
 
         {a.excerpt && (
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{a.excerpt}</p>
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            {a.excerpt}
+          </p>
         )}
 
-        <div className="mt-auto flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-400">
+        <div className="mt-auto flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-400 dark:border-slate-800">
           {a.publishedAt && (
             <span>
               {new Date(a.publishedAt).toLocaleDateString(undefined, {

@@ -20,17 +20,17 @@ body {
 
 /* Lightweight prose styles for rendered article markdown (no plugin needed). */
 .prose {
-  @apply text-[1.075rem] leading-8 text-slate-700;
+  @apply text-[1.075rem] leading-8 text-slate-700 dark:text-slate-300;
   overflow-wrap: break-word;
 }
 .prose pre {
   @apply my-5 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
 }
 .prose h2 {
-  @apply mt-12 mb-4 font-serif text-2xl font-bold tracking-tight text-ink;
+  @apply mt-12 mb-4 font-serif text-2xl font-bold tracking-tight text-ink dark:text-white;
 }
 .prose h3 {
-  @apply mt-8 mb-2 font-serif text-xl font-semibold text-ink;
+  @apply mt-8 mb-2 font-serif text-xl font-semibold text-ink dark:text-white;
 }
 .prose p {
   @apply my-5 leading-8;
@@ -49,19 +49,19 @@ body {
   @apply leading-7;
 }
 .prose a {
-  @apply font-medium text-brand underline underline-offset-2 transition hover:text-brand-dark;
+  @apply font-medium text-brand underline underline-offset-2 transition hover:text-brand-dark dark:text-brand-light;
 }
 .prose strong {
-  @apply font-semibold text-ink;
+  @apply font-semibold text-ink dark:text-white;
 }
 .prose blockquote {
-  @apply my-7 rounded-r-lg border-l-4 border-brand bg-slate-50 py-2 pl-5 pr-4 italic text-slate-600;
+  @apply my-7 rounded-r-lg border-l-4 border-brand bg-slate-50 py-2 pl-5 pr-4 italic text-slate-600 dark:bg-slate-800/60 dark:text-slate-300;
 }
 .prose code {
-  @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-800;
+  @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-800 dark:bg-slate-800 dark:text-slate-200;
 }
 .prose hr {
-  @apply my-10 border-slate-200;
+  @apply my-10 border-slate-200 dark:border-slate-800;
 }
 .prose img {
   @apply my-6 rounded-xl;

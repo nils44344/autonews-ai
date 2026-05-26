@@ -57,7 +57,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const c = categoryStyle(a.category?.name);
 
   return (
-    <article className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60 md:p-10">
+    <article className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200/60 dark:bg-slate-900 dark:ring-slate-800 md:p-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -87,7 +87,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           Home
         </Link>
         <span>/</span>
-        <span className="text-slate-700">{a.category?.name ?? "News"}</span>
+        <span className="text-slate-700 dark:text-slate-300">{a.category?.name ?? "News"}</span>
       </nav>
 
       {a.category && (
@@ -99,12 +99,14 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </span>
       )}
 
-      <h1 className="mt-3 break-words font-serif text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+      <h1 className="mt-3 break-words font-serif text-3xl font-extrabold leading-tight tracking-tight text-ink dark:text-white sm:text-4xl">
         {a.title}
       </h1>
-      {a.dek && <p className="mt-4 text-xl leading-relaxed text-slate-600">{a.dek}</p>}
-      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 pb-5 text-sm text-slate-500">
-        <span className="font-semibold text-slate-700">{a.readingMin} min read</span>
+      {a.dek && (
+        <p className="mt-4 text-xl leading-relaxed text-slate-600 dark:text-slate-300">{a.dek}</p>
+      )}
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 pb-5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <span className="font-semibold text-slate-700 dark:text-slate-200">{a.readingMin} min read</span>
         {a.publishedAt && (
           <span>
             ·{" "}
@@ -125,9 +127,9 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <h2 className="text-2xl font-bold mb-4">Frequently asked questions</h2>
           <div className="space-y-4">
             {faq.map((f, i) => (
-              <details key={i} className="rounded-lg border border-slate-200 p-4">
+              <details key={i} className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
                 <summary className="cursor-pointer font-semibold">{f.question}</summary>
-                <p className="mt-2 text-slate-600">{f.answer}</p>
+                <p className="mt-2 text-slate-600 dark:text-slate-400">{f.answer}</p>
               </details>
             ))}
           </div>
@@ -155,7 +157,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
       )}
 
       {a.linksOut.length > 0 && (
-        <section className="mt-10 border-t border-slate-200 pt-6">
+        <section className="mt-10 border-t border-slate-200 pt-6 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-3">Related</h2>
           <ul className="space-y-2">
             {a.linksOut.map((l) => (

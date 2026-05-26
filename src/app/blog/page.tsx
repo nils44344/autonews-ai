@@ -22,10 +22,15 @@ export default async function BlogIndex() {
 
   return (
     <div>
-      <h1 className="text-3xl font-extrabold mb-1">Blog</h1>
-      <p className="text-slate-600 mb-6">Explainers, guides, comparisons and analysis.</p>
+      <div className="mb-2 flex items-center gap-3">
+        <h1 className="font-serif text-3xl font-bold text-ink dark:text-white">Blog</h1>
+        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+      </div>
+      <p className="mb-8 text-slate-600 dark:text-slate-400">
+        Explainers, guides, comparisons and analysis.
+      </p>
       {posts.length === 0 ? (
-        <p className="text-slate-500">No blog posts yet.</p>
+        <p className="text-slate-500">No blog posts yet — the next cycle will add some.</p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((a) => (

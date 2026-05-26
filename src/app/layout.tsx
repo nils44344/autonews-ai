@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter, Lora } from "next/font/google";
 import { env } from "@/lib/env";
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 // Self-hosted by Next.js at build time (no runtime Google request) — fast + privacy-friendly.
@@ -31,46 +32,19 @@ const nav = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
-      <body className="min-h-screen flex flex-col bg-slate-50 font-sans text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-ink antialiased dark:bg-slate-950 dark:text-slate-100">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();",
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: ldScript(organizationJsonLd()) }}
         />
 
-        <header className="sticky top-0 z-30">
-          <div className="h-1 w-full bg-gradient-to-r from-brand via-indigo-500 to-fuchsia-500" />
-          <div className="border-b border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-              <Link href="/" className="flex shrink-0 items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink font-serif text-base font-black text-white sm:h-9 sm:w-9 sm:text-lg">
-                  A
-                </span>
-                <span className="whitespace-nowrap font-serif text-lg font-bold tracking-tight text-ink sm:text-xl">
-                  {env.SITE_NAME}
-                </span>
-              </Link>
-
-              <nav className="flex shrink-0 items-center gap-0.5 text-sm font-medium sm:gap-1">
-                {nav.map((n) => (
-                  <Link
-                    key={n.href}
-                    href={n.href}
-                    className="rounded-full px-2.5 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-ink sm:px-3"
-                  >
-                    {n.label}
-                  </Link>
-                ))}
-                <span className="ml-2 hidden items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 sm:flex">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-                  </span>
-                  LIVE
-                </span>
-              </nav>
-            </div>
-          </div>
-        </header>
+        <SiteHeader siteName={env.SITE_NAME} nav={nav} />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
 

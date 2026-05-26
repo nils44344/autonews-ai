@@ -1,4 +1,5 @@
 import { generateJSON } from "../ai";
+import { env } from "../env";
 import { prisma } from "../db";
 import { uniqueSlug } from "../utils";
 import { checkMemeSafety } from "../quality/safety";
@@ -37,13 +38,16 @@ export async function generateMeme(topicId: string) {
 
   // Defence-in-depth: rule-based safety filter on top of the model's judgement.
   const safety = checkMemeSafety(`${topic.title} ${meme.topText} ${meme.bottomText} ${meme.caption}`);
-  const status = safety.score >= 70 ? "REVIEW" : "REJECTED";
+  // Unsafe → REJECTED. Safe → auto-publish in auto mode, else park in REVIEW.
+  const passed = safety.score >= 70;
+  const status = !passed ? "REJECTED" : env.PUBLISH_MODE === "auto" ? "PUBLISHED" : "REVIEW";
 
   const category = await ensureCategory(topic.category);
 
   return prisma.meme.create({
     data: {
       status,
+      publishedAt: status === "PUBLISHED" ? new Date() : null,
       title: `${topic.title} — meme`.slice(0, 180),
       slug: uniqueSlug(topic.title),
       format: meme.format,

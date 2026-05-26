@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { safe } from "@/lib/safe";
+import { categoryStyle } from "@/lib/ui";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
@@ -21,37 +22,58 @@ export default async function MemesPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-extrabold mb-1">Memes</h1>
-      <p className="text-slate-600 mb-6">The day&apos;s trends, served with a side of humour.</p>
+      <div className="mb-2 flex items-center gap-3">
+        <h1 className="font-serif text-3xl font-bold text-ink dark:text-white">Memes</h1>
+        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+      </div>
+      <p className="mb-8 text-slate-600 dark:text-slate-400">
+        The day&apos;s trends, served with a side of humour.
+      </p>
 
       {memes.length === 0 ? (
-        <p className="text-slate-500">No memes published yet.</p>
+        <p className="text-slate-500">No memes published yet — the next cycle will add some.</p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {memes.map((m) => (
-            <figure key={m.id} className="rounded-xl border border-slate-200 overflow-hidden">
-              {m.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.imageUrl} alt={m.title} className="w-full aspect-square object-cover" />
-              ) : (
-                <div className="aspect-square bg-slate-100 flex flex-col items-center justify-center p-4 text-center">
-                  <span className="text-xs uppercase tracking-wide text-slate-400">
-                    {m.format}
-                  </span>
-                  {m.topText && <p className="mt-2 font-bold uppercase">{m.topText}</p>}
-                  {m.bottomText && <p className="mt-auto font-bold uppercase">{m.bottomText}</p>}
-                </div>
-              )}
-              <figcaption className="p-3 text-sm">
-                {m.category && (
-                  <span className="text-xs rounded-full bg-slate-100 px-2 py-0.5">
-                    {m.category.name}
-                  </span>
+          {memes.map((m) => {
+            const c = categoryStyle(m.category?.name);
+            return (
+              <figure
+                key={m.id}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+              >
+                {m.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.imageUrl} alt={m.title} className="aspect-square w-full object-cover" />
+                ) : (
+                  <div
+                    className={`flex aspect-square flex-col items-center justify-between gap-2 bg-gradient-to-br ${c.gradient} p-5 text-center`}
+                  >
+                    <p className="break-words text-sm font-black uppercase leading-tight text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.45)] sm:text-base">
+                      {m.topText}
+                    </p>
+                    <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/70">
+                      {m.format}
+                    </span>
+                    <p className="break-words text-sm font-black uppercase leading-tight text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.45)] sm:text-base">
+                      {m.bottomText}
+                    </p>
+                  </div>
                 )}
-                {m.caption && <p className="mt-2 text-slate-600">{m.caption}</p>}
-              </figcaption>
-            </figure>
-          ))}
+                <figcaption className="p-4">
+                  {m.category && (
+                    <span
+                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.badge}`}
+                    >
+                      {m.category.name}
+                    </span>
+                  )}
+                  {m.caption && (
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{m.caption}</p>
+                  )}
+                </figcaption>
+              </figure>
+            );
+          })}
         </div>
       )}
     </div>
