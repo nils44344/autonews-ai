@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Lightweight prose styles for rendered article markdown (no plugin needed). */
+.prose h2 {
+  @apply mt-10 mb-3 text-2xl font-bold tracking-tight;
+}
+.prose h3 {
+  @apply mt-8 mb-2 text-xl font-semibold;
+}
+.prose p {
+  @apply my-4 leading-relaxed text-slate-700;
+}
+.prose ul {
+  @apply my-4 list-disc space-y-1 pl-6 text-slate-700;
+}
+.prose ol {
+  @apply my-4 list-decimal space-y-1 pl-6 text-slate-700;
+}
+.prose a {
+  @apply text-brand underline underline-offset-2 hover:text-brand-dark;
+}
+.prose blockquote {
+  @apply my-6 border-l-4 border-slate-200 pl-4 italic text-slate-600;
+}

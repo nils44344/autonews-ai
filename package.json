@@ -1,0 +1,56 @@
+{
+  "name": "autonews-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AutoNews AI — fully automated, SEO-focused AI news platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "worker": "tsx watch worker/index.ts",
+    "worker:prod": "tsx worker/index.ts",
+    "db:local": "node scripts/local-db.mjs",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "trends:once": "tsx scripts/run-trends-once.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@prisma/client": "^5.22.0",
+    "bullmq": "^5.34.0",
+    "cheerio": "^1.0.0",
+    "date-fns": "^4.1.0",
+    "google-trends-api": "^4.9.2",
+    "ioredis": "^5.4.2",
+    "next": "^14.2.35",
+    "openai": "^4.77.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rss-parser": "^3.13.0",
+    "slugify": "^1.6.6",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "embedded-postgres": "^18.3.0-beta.17",
+    "postcss": "^8.4.49",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

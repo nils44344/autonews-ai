@@ -1,0 +1,82 @@
+# AutoNews AI — full stack. `docker compose up -d` brings up db, cache, web, worker.
+# For the free MVP, run Ollama on the HOST and point AI_PROVIDER=ollama at it
+# (host.docker.internal). To add Ollama as a container, see the commented block.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autonews
+      POSTGRES_PASSWORD: autonews
+      POSTGRES_DB: autonews
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autonews"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://autonews:autonews@db:5432/autonews?schema=public
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "3000:3000"
+    # Apply schema + seed on first boot, then start the server.
+    command: sh -c "npx prisma db push && npx tsx prisma/seed.ts && npm run start"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://autonews:autonews@db:5432/autonews?schema=public
+      REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      web: { condition: service_started }
+    command: npm run worker:prod
+
+  # ── Optional: run Ollama in a container instead of on the host ──
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   restart: unless-stopped
+  #   ports: ["11434:11434"]
+  #   volumes: [ollama:/root/.ollama]
+  # (then set OLLAMA_BASE_URL=http://ollama:11434 on web + worker)
+
+volumes:
+  pgdata:
+  redisdata:
+  # ollama:

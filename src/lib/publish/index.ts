@@ -1,0 +1,65 @@
+import { env } from "../env";
+import { prisma } from "../db";
+import { buildInternalLinks, injectAffiliateLinks } from "../seo/internal-links";
+
+/**
+ * Finalise an article for publication:
+ *  - inject affiliate links + build internal links
+ *  - respect PUBLISH_MODE (manual => REVIEW, auto => check quality gate)
+ *  - set canonical URL + publishedAt
+ */
+export async function publishArticle(articleId: string) {
+  const article = await prisma.article.findUniqueOrThrow({ where: { id: articleId } });
+
+  // Quality gate.
+  if (article.qualityScore < env.MIN_QUALITY_SCORE) {
+    await prisma.article.update({ where: { id: articleId }, data: { status: "REJECTED" } });
+    await prisma.jobLog.create({
+      data: {
+        job: "publish",
+        status: "ok",
+        message: `rejected: quality ${article.qualityScore} < ${env.MIN_QUALITY_SCORE}`,
+        meta: { articleId },
+      },
+    });
+    return { published: false, reason: "below-quality-threshold" as const };
+  }
+
+  // Manual mode: park in REVIEW for an editor to approve via the dashboard.
+  if (env.PUBLISH_MODE === "manual") {
+    await prisma.article.update({ where: { id: articleId }, data: { status: "REVIEW" } });
+    return { published: false, reason: "awaiting-approval" as const };
+  }
+
+  return approveAndPublish(articleId);
+}
+
+/** Called by the publish gate (auto mode) or by an editor clicking "Approve". */
+export async function approveAndPublish(articleId: string) {
+  const article = await prisma.article.findUniqueOrThrow({ where: { id: articleId } });
+
+  const bodyWithAffiliates = await injectAffiliateLinks(article.body);
+  const path = article.type === "BLOG" ? "blog" : "article";
+  const canonical = `${env.SITE_URL}/${path}/${article.slug}`;
+
+  const updated = await prisma.article.update({
+    where: { id: articleId },
+    data: {
+      body: bodyWithAffiliates,
+      canonicalUrl: canonical,
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+    },
+  });
+
+  await buildInternalLinks(articleId);
+  if (article.topicId) {
+    await prisma.trendTopic.update({ where: { id: article.topicId }, data: { status: "PUBLISHED" } });
+  }
+
+  await prisma.jobLog.create({
+    data: { job: "publish", status: "ok", message: "published", meta: { articleId } },
+  });
+
+  return { published: true, article: updated };
+}

@@ -1,0 +1,297 @@
+// AutoNews AI — data model
+// PostgreSQL + Prisma. Run `npm run db:push` (or db:migrate) to apply.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Content taxonomy ─────────────────────────────────────────────────────────
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  kind      String    @default("news") // news | blog | meme
+  articles  Article[]
+  memes     Meme[]
+  createdAt DateTime  @default(now())
+}
+
+model Tag {
+  id       String        @id @default(cuid())
+  name     String        @unique
+  slug     String        @unique
+  articles ArticleTag[]
+}
+
+// ── Trend detection ──────────────────────────────────────────────────────────
+
+enum SourceType {
+  RSS
+  REDDIT
+  GOOGLE_TRENDS
+  GOOGLE_NEWS
+  HACKERNEWS
+  NEWSAPI
+  YOUTUBE
+  X
+}
+
+model Source {
+  id           String       @id @default(cuid())
+  type         SourceType
+  name         String
+  url          String?      // feed url / subreddit / query
+  category     String       @default("general")
+  enabled      Boolean      @default(true)
+  weight       Float        @default(1.0) // trust/importance multiplier
+  lastFetched  DateTime?
+  lastStatus   String?      // ok | error:<msg>
+  signals      TrendSignal[]
+  createdAt    DateTime     @default(now())
+
+  @@unique([type, url])
+}
+
+// A raw observation pulled from a source (one headline / post / query).
+model TrendSignal {
+  id          String     @id @default(cuid())
+  source      Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId    String
+  title       String
+  url         String?
+  summary     String?    @db.Text
+  score       Float      @default(0) // raw popularity from the source (upvotes, rank...)
+  raw         Json?
+  topic       TrendTopic? @relation(fields: [topicId], references: [id])
+  topicId     String?
+  observedAt  DateTime   @default(now())
+
+  @@index([observedAt])
+  @@index([sourceId])
+}
+
+enum TopicStatus {
+  DETECTED   // freshly clustered
+  RANKED     // scored & ranked
+  SELECTED   // chosen for generation
+  GENERATING
+  GENERATED
+  REJECTED
+  PUBLISHED
+}
+
+// A clustered, dedup'd topic aggregated from many signals.
+model TrendTopic {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  category        String        @default("general")
+  keywords        String[]
+  status          TopicStatus   @default(DETECTED)
+
+  // Scoring (0-100 each)
+  viralScore      Float         @default(0)
+  seoScore        Float         @default(0)
+  freshnessScore  Float         @default(0)
+  competitionScore Float        @default(0) // higher = LOWER competition (more opportunity)
+  finalScore      Float         @default(0)
+
+  sourceCount     Int           @default(1)
+  isBreaking      Boolean       @default(false)
+
+  signals         TrendSignal[]
+  articles        Article[]
+  memes           Meme[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([finalScore])
+  @@index([status])
+}
+
+// ── Articles (news + blog) ───────────────────────────────────────────────────
+
+enum ArticleType {
+  NEWS
+  BLOG
+}
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW       // waiting for manual approval
+  SCHEDULED
+  PUBLISHED
+  REJECTED
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  type          ArticleType   @default(NEWS)
+  status        ArticleStatus @default(DRAFT)
+
+  title         String
+  slug          String        @unique
+  dek           String?       @db.Text // standfirst / subtitle
+  body          String        @db.Text // markdown
+  excerpt       String?       @db.Text
+
+  // SEO
+  seoTitle      String?
+  seoDescription String?      @db.Text
+  keywords      String[]
+  canonicalUrl  String?
+  faq           Json?         // [{question, answer}]
+  sources       Json?         // [{title, url}] external citations
+  ogImage       String?
+
+  // Quality
+  qualityScore  Float         @default(0)
+  qualityReport Json?
+  wordCount     Int           @default(0)
+  readingMin    Int           @default(0)
+
+  // Relations
+  category      Category?     @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+  topic         TrendTopic?   @relation(fields: [topicId], references: [id])
+  topicId       String?
+  tags          ArticleTag[]
+  clusterId     String?       // topic-cluster id linking pillar + supporting posts
+  isPillar      Boolean       @default(false)
+
+  // Internal linking (self-referential many-to-many)
+  linksOut      ArticleLink[] @relation("from")
+  linksIn       ArticleLink[] @relation("to")
+
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+  views         Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, type])
+  @@index([publishedAt])
+  @@index([clusterId])
+}
+
+model ArticleTag {
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+
+  @@id([articleId, tagId])
+}
+
+model ArticleLink {
+  from     Article @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  fromId   String
+  to       Article @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+  toId     String
+  anchor   String
+
+  @@id([fromId, toId])
+}
+
+// ── Memes ────────────────────────────────────────────────────────────────────
+
+enum MemeStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  REJECTED
+}
+
+model Meme {
+  id           String      @id @default(cuid())
+  status       MemeStatus  @default(DRAFT)
+  title        String
+  slug         String      @unique
+  format       String      // e.g. "Drake", "Distracted Boyfriend", "two-panel"
+  topText      String?
+  bottomText   String?
+  caption      String?     @db.Text // social-share caption
+  imagePrompt  String      @db.Text // AI image generation prompt
+  imageUrl     String?     // populated once an image is rendered
+  category     Category?   @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+  topic        TrendTopic? @relation(fields: [topicId], references: [id])
+  topicId      String?
+  safetyScore  Float       @default(0) // 0-100, higher = safer
+  safetyReport Json?
+  publishedAt  DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@index([status])
+}
+
+// ── Monetization (architecture-ready) ────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  confirmed    Boolean  @default(false)
+  unsubToken   String   @unique @default(cuid())
+  topics       String[] // interest tags
+  createdAt    DateTime @default(now())
+}
+
+model AffiliateLink {
+  id        String  @id @default(cuid())
+  name      String
+  url       String
+  network   String  // amazon | impact | shareasale | custom
+  keywords  String[] // auto-insert when these keywords appear in content
+  clicks    Int     @default(0)
+  enabled   Boolean @default(true)
+}
+
+model SponsoredPost {
+  id          String    @id @default(cuid())
+  advertiser  String
+  articleId   String?
+  budgetCents Int       @default(0)
+  startAt     DateTime?
+  endAt       DateTime?
+  active      Boolean   @default(false)
+}
+
+// Aggregated daily revenue/traffic snapshot for the dashboard.
+model DailyStat {
+  id             String   @id @default(cuid())
+  date           DateTime @unique @db.Date
+  pageViews      Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  articles       Int      @default(0)
+  adRevenueCents Int      @default(0)
+  affiliateCents Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+// ── Ops / audit ──────────────────────────────────────────────────────────────
+
+model JobLog {
+  id        String   @id @default(cuid())
+  job       String   // queue/job name
+  status    String   // started | ok | error
+  message   String?  @db.Text
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([job, createdAt])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
