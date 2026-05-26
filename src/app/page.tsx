@@ -37,7 +37,30 @@ export default async function HomePage() {
   if (!lead) return <EmptyState />;
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
+      {/* Live trending ticker (auto-scrolling marquee) */}
+      {trending.length > 0 && (
+        <div className="-mx-4 flex items-center overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 sm:mx-0 sm:rounded-2xl sm:border">
+          <span className="z-10 flex shrink-0 items-center gap-1.5 self-stretch bg-accent px-3 text-xs font-extrabold uppercase tracking-wide text-white">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            Trending
+          </span>
+          <div className="overflow-hidden py-2.5">
+            <div className="flex w-max animate-marquee gap-10 pl-10">
+              {[...trending, ...trending].map((t, i) => (
+                <Link
+                  key={i}
+                  href={`${t.type === "BLOG" ? "/blog" : "/article"}/${t.slug}`}
+                  className="whitespace-nowrap text-sm font-medium text-slate-600 transition hover:text-brand dark:text-slate-300"
+                >
+                  <span className="font-bold text-accent">›</span> {t.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero: featured story + trending rail */}
       <section className="grid gap-6 lg:grid-cols-3">
         <Link

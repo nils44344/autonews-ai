@@ -1,6 +1,7 @@
 import { env } from "../env";
 import { prisma } from "../db";
 import { buildInternalLinks, injectAffiliateLinks } from "../seo/internal-links";
+import { pingIndexNow } from "../seo/indexnow";
 
 /**
  * Finalise an article for publication:
@@ -60,6 +61,9 @@ export async function approveAndPublish(articleId: string) {
   await prisma.jobLog.create({
     data: { job: "publish", status: "ok", message: "published", meta: { articleId } },
   });
+
+  // Instant search-engine push (IndexNow). Fire-and-forget — never blocks publish.
+  void pingIndexNow([canonical]);
 
   return { published: true, article: updated };
 }

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Inter, Lora } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { env } from "@/lib/env";
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
-// Self-hosted by Next.js at build time (no runtime Google request) — fast + privacy-friendly.
+// Self-hosted by Next.js at build time. Space Grotesk = techy display headlines.
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const serif = Lora({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
+const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.SITE_URL),
@@ -30,7 +30,7 @@ const nav = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-ink antialiased dark:bg-slate-950 dark:text-slate-100">
         <script
           dangerouslySetInnerHTML={{
