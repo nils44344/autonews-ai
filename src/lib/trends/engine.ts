@@ -108,78 +108,83 @@ export async function runTrendCycle(): Promise<{ topics: number; signals: number
 
   let topicCount = 0;
 
-  // Fetch the recent-topics dedup window ONCE before the loop (it used to be
-  // re-queried for every cluster — the dominant cost of a cycle). New topics are
-  // appended in-memory so later clusters still dedupe against them.
+  // Score + noise-filter every cluster IN MEMORY first (no DB), then persist only
+  // the highest-scoring few. Writing all 200-300 clusters per cycle hammered
+  // Neon's free tier (connection resets) — and we only ever generate from the
+  // top handful anyway.
+  const MAX_PERSIST = 40;
+  const scored = clusters
+    .map((cluster) => {
+      const distinctSources = new Set(cluster.signals.map((s) => s.source.id)).size;
+      const avgPopularity =
+        cluster.signals.reduce((a, s) => a + s.signal.score, 0) / cluster.signals.length;
+      const weightSum = cluster.signals.reduce((a, s) => a + s.source.weight, 0);
+      const combinedText = cluster.signals
+        .map((s) => `${s.signal.title}. ${s.signal.summary ?? ""}`)
+        .join(" ");
+      const keywords = extractKeywords(combinedText, 8);
+      const scores = scoreTopic({
+        popularity: avgPopularity,
+        sourceCount: distinctSources,
+        ageHours: 0,
+        weightSum,
+        keywordSpecificity: keywords.length,
+      });
+      return { cluster, distinctSources, avgPopularity, keywords, scores };
+    })
+    .filter((x) => !(x.distinctSources < 2 && x.avgPopularity < 40)) // drop lone low-pop noise
+    .sort((a, b) => b.scores.finalScore - a.scores.finalScore)
+    .slice(0, MAX_PERSIST);
+
+  // Fetch the recent-topics dedup window ONCE (new topics appended in-memory).
   const recent = await prisma.trendTopic.findMany({
     where: { createdAt: { gte: new Date(now - 1000 * 60 * 60 * 24) } },
     select: { id: true, title: true, slug: true },
     take: 500,
   });
 
-  for (const cluster of clusters) {
-    // Single-source, low-popularity noise: skip to keep the pipeline focused.
-    const distinctSources = new Set(cluster.signals.map((s) => s.source.id)).size;
-    const avgPopularity =
-      cluster.signals.reduce((a, s) => a + s.signal.score, 0) / cluster.signals.length;
-    if (distinctSources < 2 && avgPopularity < 40) continue;
+  for (const { cluster, distinctSources, keywords, scores } of scored) {
+    try {
+      // Merge into an existing recent topic if the title is similar, else create.
+      const match = recent.find((t) => similarity(t.title, cluster.title) > SIMILARITY_THRESHOLD);
 
-    const weightSum = cluster.signals.reduce((a, s) => a + s.source.weight, 0);
-    const combinedText = cluster.signals.map((s) => `${s.signal.title}. ${s.signal.summary ?? ""}`).join(" ");
-    const keywords = extractKeywords(combinedText, 8);
-    const ageHours = 0; // signals are fresh this cycle; refined when merged below
+      let topic;
+      if (match) {
+        topic = await prisma.trendTopic.update({
+          where: { id: match.id },
+          data: { sourceCount: distinctSources, keywords, ...scores, updatedAt: new Date() },
+        });
+      } else {
+        topic = await prisma.trendTopic.create({
+          data: {
+            title: cluster.title.slice(0, 200),
+            slug: uniqueSlug(cluster.title),
+            category: cluster.category,
+            keywords,
+            sourceCount: distinctSources,
+            status: "RANKED",
+            ...scores,
+          },
+        });
+        recent.push({ id: topic.id, title: topic.title, slug: topic.slug });
+      }
 
-    const scores = scoreTopic({
-      popularity: avgPopularity,
-      sourceCount: distinctSources,
-      ageHours,
-      weightSum,
-      keywordSpecificity: keywords.length,
-    });
-
-    // Merge into an existing recent topic if the title is similar, else create.
-    const match = recent.find((t) => similarity(t.title, cluster.title) > SIMILARITY_THRESHOLD);
-
-    let topic;
-    if (match) {
-      topic = await prisma.trendTopic.update({
-        where: { id: match.id },
-        data: {
-          sourceCount: distinctSources,
-          keywords,
-          ...scores,
-          updatedAt: new Date(),
-        },
+      await prisma.trendSignal.createMany({
+        data: cluster.signals.map((s) => ({
+          sourceId: s.source.id,
+          topicId: topic.id,
+          title: s.signal.title.slice(0, 300),
+          url: s.signal.url,
+          summary: s.signal.summary,
+          score: s.signal.score,
+          raw: (s.signal.raw ?? undefined) as object | undefined,
+        })),
       });
-    } else {
-      topic = await prisma.trendTopic.create({
-        data: {
-          title: cluster.title.slice(0, 200),
-          slug: uniqueSlug(cluster.title),
-          category: cluster.category,
-          keywords,
-          sourceCount: distinctSources,
-          status: "RANKED",
-          ...scores,
-        },
-      });
-      recent.push({ id: topic.id, title: topic.title, slug: topic.slug });
+      topicCount++;
+    } catch (err) {
+      // A transient Neon connection blip on one topic must not kill the cycle.
+      console.error("  trend persist skipped:", (err as Error).message.slice(0, 80));
     }
-
-    // Persist the raw signals linked to this topic.
-    await prisma.trendSignal.createMany({
-      data: cluster.signals.map((s) => ({
-        sourceId: s.source.id,
-        topicId: topic.id,
-        title: s.signal.title.slice(0, 300),
-        url: s.signal.url,
-        summary: s.signal.summary,
-        score: s.signal.score,
-        raw: (s.signal.raw ?? undefined) as object | undefined,
-      })),
-    });
-
-    topicCount++;
   }
 
   await prisma.jobLog.create({
