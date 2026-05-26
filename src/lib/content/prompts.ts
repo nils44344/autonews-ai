@@ -69,18 +69,23 @@ export function memePrompt(title: string, category: string): string {
 Decide if it is meme-worthy (light, non-tragic, non-sensitive). If a topic involves death,
 violence, disasters, hate, or protected groups, set "memeWorthy": false.
 
-If meme-worthy, create ONE share-ready meme concept using a popular, evergreen format
-(e.g. "Drake", "Distracted Boyfriend", "Two Buttons", "Expanding Brain", "This is Fine").
+If meme-worthy, create ONE punchy meme in a classic TWO-LINE (top + bottom) format.
+Pick a format from EXACTLY this list: "Drake", "This is Fine", "Bad Luck Brian",
+"Ancient Aliens", "One Does Not Simply", "Futurama Fry", "Success Kid", "Grumpy Cat",
+"Mocking Spongebob", "Doge".
+Write it like a real meme: topText is the setup, bottomText is the punchline. Each line must be
+SHORT and snappy (max ~45 characters), genuinely funny, and reference the actual story — not a
+description of it. No hashtags inside topText/bottomText.
 
 Return ONLY JSON:
 {
   "memeWorthy": true|false,
   "reason": "why / why not",
-  "format": "meme format name",
-  "topText": "top caption (optional)",
-  "bottomText": "bottom caption (optional)",
+  "format": "one format from the list above",
+  "topText": "short setup line (REQUIRED, <=45 chars)",
+  "bottomText": "short punchline (REQUIRED, <=45 chars)",
   "caption": "social post caption with 1-2 hashtags",
-  "imagePrompt": "detailed text-to-image prompt to render the meme (describe scene + on-image text)"
+  "imagePrompt": "short text-to-image description (fallback only)"
 }`;
 }
 

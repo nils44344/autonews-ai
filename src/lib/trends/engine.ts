@@ -189,13 +189,52 @@ export async function runTrendCycle(): Promise<{ topics: number; signals: number
   return { topics: topicCount, signals: items.length };
 }
 
-/** Pick the top N ranked topics that don't yet have an article. */
+/** Keyword-set Jaccard — same event from different outlets shares keywords even
+ *  when the headlines are worded differently. */
+function keywordOverlap(a: string[], b: string[]): number {
+  const sa = new Set(a.map((s) => s.toLowerCase()));
+  const sb = new Set(b.map((s) => s.toLowerCase()));
+  if (sa.size === 0 || sb.size === 0) return 0;
+  let inter = 0;
+  for (const w of sa) if (sb.has(w)) inter++;
+  return inter / (sa.size + sb.size - inter);
+}
+
+function isSameStory(aTitle: string, aKw: string[], bTitle: string, bKw: string[]): boolean {
+  return similarity(aTitle, bTitle) > 0.35 || keywordOverlap(aKw, bKw) > 0.45;
+}
+
+/**
+ * Pick the top N ranked topics that don't yet have an article — and that aren't
+ * near-duplicates of each other or of anything published in the last 3 days.
+ * This stops the pipeline burning generation on the same story (same event,
+ * different outlet headlines) over and over.
+ */
 export async function selectTopTopics(limit: number) {
-  return prisma.trendTopic.findMany({
+  const candidates = await prisma.trendTopic.findMany({
     where: { status: "RANKED", articles: { none: {} } },
     orderBy: { finalScore: "desc" },
-    take: limit,
+    take: Math.max(limit * 10, 50),
   });
+
+  const recent = await prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3) },
+    },
+    select: { title: true, keywords: true },
+    orderBy: { publishedAt: "desc" },
+    take: 200,
+  });
+
+  const picked: typeof candidates = [];
+  for (const c of candidates) {
+    if (picked.length >= limit) break;
+    if (recent.some((r) => isSameStory(c.title, c.keywords, r.title, r.keywords))) continue;
+    if (picked.some((p) => isSameStory(c.title, c.keywords, p.title, p.keywords))) continue;
+    picked.push(c);
+  }
+  return picked;
 }
 
 export { slug };
