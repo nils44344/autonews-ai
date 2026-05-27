@@ -7,6 +7,11 @@ import type { RawSignal } from "./types";
 
 const SIMILARITY_THRESHOLD = 0.42;
 
+// Dispute/controversy markers — a reserved selection slot pulls the best match
+// so it gets written as a neutral Fact Check (mirrors the writer's detector).
+const CONTROVERSY_TOPIC =
+  /\b(controvers(y|ial)|backlash|slammed|criticis(ed|m)|outrage|trolled|sparks? (a )?row|accus(ed|ation)|alleg(ed|ation|edly)|denies|denied|hits? back|clarifies|disputed?|fact[- ]?check|misleading|fake news|hoax|debunk|rumou?r|snubbed?|apologis|under fire|faces? flak|no[- ]?ball|umpir(e|ing)|\bdrs\b|wrongly|robbed|was .*\b(out|not out)\b)/i;
+
 // Hard cap per source. Without this, one slow/hanging feed makes the whole
 // Promise.all wait minutes (trend collection used to take ~15 min). Now the
 // cycle finishes in seconds and simply skips whatever didn't answer in time.
@@ -216,10 +221,12 @@ function isSameStory(aTitle: string, aKw: string[], bTitle: string, bKw: string[
  * different outlet headlines) over and over.
  */
 export async function selectTopTopics(limit: number) {
+  // Wide pool so the reserved Fact-Check / Entertainment / Cricket slots can
+  // reach those topics even when they score below the tech/startup top.
   const candidates = await prisma.trendTopic.findMany({
     where: { status: "RANKED", articles: { none: {} } },
     orderBy: { finalScore: "desc" },
-    take: Math.max(limit * 10, 50),
+    take: 300,
   });
 
   const recent = await prisma.article.findMany({
@@ -237,26 +244,31 @@ export async function selectTopTopics(limit: number) {
     pool.some((p) => isSameStory(c.title, c.keywords, p.title, p.keywords));
 
   const picked: typeof candidates = [];
-  const usedCategories = new Set<string>();
+  const take = (c?: (typeof candidates)[number]) => {
+    if (c && picked.length < limit && !picked.includes(c) && !isDup(c, picked)) picked.push(c);
+  };
 
-  // Pass 1: spread across categories — at most one topic per category — so
-  // sections like Entertainment / Cricket / Fact Check actually get coverage
-  // instead of every slot going to the (usually higher-scoring) business/tech.
+  // RESERVED slots so the chronically-empty sections actually fill (they're
+  // real but lower-scoring than tech/startups, so a pure top-by-score pick
+  // never reaches them):
+  //  1) the best controversy/dispute topic → becomes a Fact Check
+  take(candidates.find((c) => CONTROVERSY_TOPIC.test(c.title)));
+  //  2) the best Entertainment topic
+  take(candidates.find((c) => c.category === "entertainment"));
+  //  3) the best Cricket topic
+  take(candidates.find((c) => c.category === "cricket"));
+
+  // Fill the rest spreading across categories (no repeats), then by pure score.
+  const usedCategories = new Set(picked.map((p) => p.category));
   for (const c of candidates) {
     if (picked.length >= limit) break;
-    if (usedCategories.has(c.category)) continue;
-    if (isDup(c, picked)) continue;
-    picked.push(c);
+    if (usedCategories.has(c.category) || isDup(c, picked)) continue;
+    take(c);
     usedCategories.add(c.category);
   }
-
-  // Pass 2: if slots remain, fill them with the next best topics by score
-  // (now allowing repeat categories).
   for (const c of candidates) {
     if (picked.length >= limit) break;
-    if (picked.includes(c)) continue;
-    if (isDup(c, picked)) continue;
-    picked.push(c);
+    take(c);
   }
 
   return picked;

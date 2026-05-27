@@ -48,9 +48,13 @@ const sources: { type: SourceType; name: string; url?: string; category: string;
   { type: "RSS", name: "ESPNcricinfo", url: "https://www.espncricinfo.com/rss/content/story/feeds/0.xml", category: "cricket", weight: 1.3 },
   { type: "REDDIT", name: "r/Cricket", url: "Cricket", category: "cricket", weight: 1.0 },
 
-  // ── Entertainment (Bollywood / OTT) ──
-  { type: "GOOGLE_NEWS", name: "GNews — Bollywood", url: gnews("Bollywood India entertainment"), category: "entertainment", weight: 1.1 },
-  { type: "GOOGLE_NEWS", name: "GNews — OTT & Movies", url: gnews("India OTT web series movie release"), category: "entertainment", weight: 1.0 },
+  // ── Entertainment (Bollywood / OTT / South cinema) — more feeds: supply was
+  //    far too thin (1 topic/48h), starving the Entertainment section. ──
+  { type: "GOOGLE_NEWS", name: "GNews — Bollywood", url: gnews("Bollywood movie India"), category: "entertainment", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — Box Office", url: gnews("Bollywood box office collection film"), category: "entertainment", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — OTT & Web Series", url: gnews("India OTT Netflix Prime web series release"), category: "entertainment", weight: 1.2 },
+  { type: "GOOGLE_NEWS", name: "GNews — South Cinema", url: gnews("South Indian cinema Telugu Tamil movie"), category: "entertainment", weight: 1.2 },
+  { type: "GOOGLE_NEWS", name: "GNews — Celebrity News", url: gnews("Indian actor actress celebrity news"), category: "entertainment", weight: 1.1 },
 
   // ── Controversy / dispute catchers → feed the neutral Fact Check vertical
   // (these surface "was X out / row / backlash" stories the giants cover thinly). ──
