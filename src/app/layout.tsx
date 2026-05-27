@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { env } from "@/lib/env";
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
+
+// Google AdSense publisher ID — loads auto-ads site-wide and serves as the
+// AdSense site-verification snippet.
+const ADSENSE_CLIENT = "ca-pub-3249967523154711";
 
 // Self-hosted by Next.js at build time. Space Grotesk = techy display headlines.
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -44,6 +49,16 @@ const sections = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
+      <head>
+        <Script
+          id="adsbygoogle-init"
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
+      </head>
       <body className="flex min-h-screen flex-col bg-slate-50 font-sans text-ink antialiased dark:bg-slate-950 dark:text-slate-100">
         <script
           dangerouslySetInnerHTML={{
