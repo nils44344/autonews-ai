@@ -29,7 +29,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHANNEL: "@AutoNewsAI"
+      TELEGRAM_CHANNEL: "@JoinAutoNewsAI"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
