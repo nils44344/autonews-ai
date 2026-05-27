@@ -42,6 +42,9 @@ const schema = z.object({
   // IndexNow key (served at /<key>.txt) — instant search-engine push on publish.
   INDEXNOW_KEY: z.string().optional(),
 
+  // Pexels API key — real HD stock photos per article (free).
+  PEXELS_API_KEY: z.string().optional(),
+
   REDDIT_USER_AGENT: z.string().default("autonews-ai/0.1"),
   NEWSAPI_KEY: z.string().optional(),
   YOUTUBE_API_KEY: z.string().optional(),

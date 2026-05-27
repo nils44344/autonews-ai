@@ -16,6 +16,7 @@ const PALETTES: Record<string, CategoryStyle> = {
   startups: { badge: "bg-orange-50 text-orange-700", dot: "bg-orange-500", gradient: "from-orange-500 to-pink-600", ring: "hover:border-orange-400" },
   markets: { badge: "bg-green-50 text-green-700", dot: "bg-green-500", gradient: "from-green-500 to-emerald-600", ring: "hover:border-green-400" },
   india: { badge: "bg-rose-50 text-rose-700", dot: "bg-rose-500", gradient: "from-rose-500 to-orange-500", ring: "hover:border-rose-400" },
+  cricket: { badge: "bg-lime-50 text-lime-700", dot: "bg-lime-500", gradient: "from-lime-500 to-green-600", ring: "hover:border-lime-400" },
   crypto: { badge: "bg-amber-50 text-amber-700", dot: "bg-amber-500", gradient: "from-amber-500 to-orange-600", ring: "hover:border-amber-400" },
   finance: { badge: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", gradient: "from-emerald-500 to-green-600", ring: "hover:border-emerald-400" },
   sports: { badge: "bg-rose-50 text-rose-700", dot: "bg-rose-500", gradient: "from-rose-500 to-red-600", ring: "hover:border-rose-400" },

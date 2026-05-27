@@ -1,6 +1,7 @@
 import type { TrendTopic } from "@prisma/client";
 import { generateJSON } from "../ai";
 import { prisma } from "../db";
+import { fetchArticleImage } from "../images";
 import { readingMinutes, uniqueSlug, wordCount } from "../utils";
 import { HOUSE_STYLE, newsArticlePrompt } from "./prompts";
 import { generatedArticleSchema } from "./schemas";
@@ -79,6 +80,10 @@ export async function writeNewsArticle(topicId: string) {
   if (!parsed) throw lastErr;
   const category = await ensureCategory(topic.category, "news");
   const wc = wordCount(parsed.body);
+  const image = await fetchArticleImage(
+    topic.category,
+    parsed.keywords.length ? parsed.keywords : topic.keywords,
+  );
 
   const article = await prisma.article.create({
     data: {
@@ -89,6 +94,7 @@ export async function writeNewsArticle(topicId: string) {
       dek: parsed.dek,
       body: parsed.body,
       excerpt: parsed.excerpt,
+      ogImage: image?.url,
       seoTitle: parsed.seoTitle || parsed.title,
       seoDescription: parsed.seoDescription || parsed.excerpt,
       keywords: parsed.keywords.length ? parsed.keywords : topic.keywords,

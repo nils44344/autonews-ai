@@ -41,6 +41,16 @@ const sources: { type: SourceType; name: string; url?: string; category: string;
   { type: "REDDIT", name: "r/IndianStreetBets", url: "IndianStreetBets", category: "markets", weight: 1.0 },
   { type: "REDDIT", name: "r/developersIndia", url: "developersIndia", category: "tech", weight: 1.0 },
   { type: "REDDIT", name: "r/StartUpIndia", url: "StartUpIndia", category: "startups", weight: 1.1 },
+
+  // ── Cricket / IPL (India's #1 traffic driver) ──
+  { type: "GOOGLE_NEWS", name: "GNews — IPL Cricket", url: gnews("IPL cricket India"), category: "cricket", weight: 1.5 },
+  { type: "GOOGLE_NEWS", name: "GNews — India Cricket", url: gnews("India cricket team match series"), category: "cricket", weight: 1.4 },
+  { type: "RSS", name: "ESPNcricinfo", url: "https://www.espncricinfo.com/rss/content/story/feeds/0.xml", category: "cricket", weight: 1.3 },
+  { type: "REDDIT", name: "r/Cricket", url: "Cricket", category: "cricket", weight: 1.0 },
+
+  // ── Entertainment (Bollywood / OTT) ──
+  { type: "GOOGLE_NEWS", name: "GNews — Bollywood", url: gnews("Bollywood India entertainment"), category: "entertainment", weight: 1.1 },
+  { type: "GOOGLE_NEWS", name: "GNews — OTT & Movies", url: gnews("India OTT web series movie release"), category: "entertainment", weight: 1.0 },
 ];
 
 const categories = [
@@ -49,7 +59,8 @@ const categories = [
   { name: "AI", slug: "ai", kind: "news" },
   { name: "Business", slug: "business", kind: "news" },
   { name: "Markets", slug: "markets", kind: "news" },
-  { name: "India", slug: "india", kind: "news" },
+  { name: "Cricket", slug: "cricket", kind: "news" },
+  { name: "Entertainment", slug: "entertainment", kind: "news" },
   { name: "Blog", slug: "blog", kind: "blog" },
 ];
 

@@ -31,7 +31,15 @@ const Close = (
   </svg>
 );
 
-export function SiteHeader({ siteName, nav }: { siteName: string; nav: NavItem[] }) {
+export function SiteHeader({
+  siteName,
+  nav,
+  sections = [],
+}: {
+  siteName: string;
+  nav: NavItem[];
+  sections?: NavItem[];
+}) {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
 
@@ -115,9 +123,43 @@ export function SiteHeader({ siteName, nav }: { siteName: string; nav: NavItem[]
                 {n.label}
               </Link>
             ))}
+            {sections.length > 0 && (
+              <>
+                <p className="mt-2 px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Sections
+                </p>
+                {sections.map((s) => (
+                  <Link
+                    key={s.href}
+                    href={s.href}
+                    onClick={() => setOpen(false)}
+                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
         )}
       </div>
+
+      {/* Section nav — horizontally scrollable category bar (desktop + mobile) */}
+      {sections.length > 0 && (
+        <div className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
+          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 py-2 text-sm font-medium [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {sections.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className="whitespace-nowrap rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-ink dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                {s.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

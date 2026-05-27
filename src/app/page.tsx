@@ -69,10 +69,19 @@ export default async function HomePage() {
       <section className="grid gap-6 lg:grid-cols-3">
         <Link
           href={`/article/${lead.slug}`}
-          className="group relative col-span-2 flex min-h-[300px] flex-col justify-end overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5"
+          className="group relative col-span-2 flex min-h-[320px] flex-col justify-end overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5"
         >
-          <div className={`absolute inset-0 bg-gradient-to-br ${leadStyle.gradient}`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          {lead.ogImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={lead.ogImage}
+              alt={lead.title}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-br ${leadStyle.gradient}`} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" />
           <div className="relative p-6 text-white sm:p-8">
             <span className="inline-flex flex-wrap items-center gap-x-2 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wide backdrop-blur sm:text-xs">
               ★ Top Story

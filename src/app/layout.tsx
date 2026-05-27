@@ -28,6 +28,18 @@ const nav = [
   { href: "/blog", label: "Blog" },
 ];
 
+// Section nav — the category portal bar. Order = editorial priority for an
+// India-first tech/business portal, with Cricket given its own prominent slot.
+const sections = [
+  { href: "/category/tech", label: "Tech" },
+  { href: "/category/startups", label: "Startups" },
+  { href: "/category/business", label: "Business" },
+  { href: "/category/markets", label: "Markets" },
+  { href: "/category/ai", label: "AI" },
+  { href: "/category/cricket", label: "Cricket" },
+  { href: "/category/entertainment", label: "Entertainment" },
+];
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
@@ -43,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: ldScript(organizationJsonLd()) }}
         />
 
-        <SiteHeader siteName={env.SITE_NAME} nav={nav} />
+        <SiteHeader siteName={env.SITE_NAME} nav={nav} sections={sections} />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
 
@@ -62,19 +74,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   refreshed around the clock.
                 </p>
               </div>
-              <nav className="flex flex-col gap-2 text-sm">
-                <span className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Explore
-                </span>
-                {nav.map((n) => (
-                  <Link key={n.href} href={n.href} className="hover:text-white">
-                    {n.label}
+              <div className="flex flex-wrap gap-x-12 gap-y-6">
+                <nav className="flex flex-col gap-2 text-sm">
+                  <span className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Explore
+                  </span>
+                  {nav.map((n) => (
+                    <Link key={n.href} href={n.href} className="hover:text-white">
+                      {n.label}
+                    </Link>
+                  ))}
+                  <Link href="/sitemap.xml" className="hover:text-white">
+                    Sitemap
                   </Link>
-                ))}
-                <Link href="/sitemap.xml" className="hover:text-white">
-                  Sitemap
-                </Link>
-              </nav>
+                </nav>
+                <nav className="flex flex-col gap-2 text-sm">
+                  <span className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Sections
+                  </span>
+                  {sections.map((s) => (
+                    <Link key={s.href} href={s.href} className="hover:text-white">
+                      {s.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs">
               <span>
