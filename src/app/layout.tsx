@@ -64,9 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-wrap items-start justify-between gap-6">
               <div className="max-w-sm">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-white font-serif font-black text-ink">
-                    A
-                  </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo.png" alt={env.SITE_NAME} className="h-9 w-9" />
                   <span className="font-serif text-lg font-bold text-white">{env.SITE_NAME}</span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed">

@@ -25,22 +25,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <div
-            style={{
-              width: 96,
-              height: 96,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#ffffff",
-              color: "#0b1120",
-              fontSize: 64,
-              fontWeight: 800,
-              borderRadius: 20,
-            }}
-          >
-            A
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="https://autonews-ai.live/logo.png" width={112} height={112} alt="" />
           <div style={{ fontSize: 56, fontWeight: 800 }}>{SITE_NAME}</div>
         </div>
         <div style={{ marginTop: 48, fontSize: 64, fontWeight: 800, lineHeight: 1.1, maxWidth: 900 }}>

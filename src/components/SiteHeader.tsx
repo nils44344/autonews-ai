@@ -63,9 +63,8 @@ export function SiteHeader({
       <div className="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link href="/" onClick={() => setOpen(false)} className="flex shrink-0 items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink font-serif text-base font-black text-white dark:bg-white dark:text-ink sm:h-9 sm:w-9 sm:text-lg">
-              A
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt={siteName} className="h-9 w-9 sm:h-10 sm:w-10" />
             <span className="whitespace-nowrap font-serif text-lg font-bold tracking-tight text-ink dark:text-white sm:text-xl">
               {siteName}
             </span>
