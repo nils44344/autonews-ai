@@ -54,7 +54,13 @@ export async function generateBlogCluster(pillarArticleId: string) {
         let raw: unknown = await generateJSON(prompt, {
           system: HOUSE_STYLE,
           temperature: attempt === 1 ? 0.75 : 0.35,
-          maxTokens: 5500, // 120b allows 8000 TPM; fits an 1500-word body
+          maxTokens: 5500, // gpt-oss-20b allows 8000 TPM; fits a 1500-word body
+          // Blog bodies are the high-volume part of a cycle. Run them on
+          // gpt-oss-20b — a SEPARATE Groq rate-limit bucket from gpt-oss-120b
+          // (news pillars) and llama-3.1-8b (QA/planning), so the three loads
+          // never compete for the same daily token budget. 20b also writes
+          // longer blogs than 8B (~870 vs ~650 words on the structured prompt).
+          model: "openai/gpt-oss-20b",
         });
         if (Array.isArray(raw)) raw = raw[0];
         parsed = generatedArticleSchema.parse(raw);
