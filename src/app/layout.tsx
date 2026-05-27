@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { env } from "@/lib/env";
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
@@ -50,12 +49,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <head>
-        <Script
-          id="adsbygoogle-init"
+        {/* Literal AdSense script in <head> so Google's verifier (which scans
+            static HTML) and the code-snippet method both find it. */}
+        <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
         <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
       </head>
