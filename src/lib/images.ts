@@ -115,13 +115,23 @@ function stripHtml(s: string): string {
 // actual player/company photos instead of generic stock. No API key needed.
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-// `mustInclude` is the entity name the matched file's title MUST contain — this
-// is the relevance gate that stops Commons returning a loosely-related-but-wrong
-// image (e.g. a Polish coworking photo for an Indian startup). If nothing
+// Joined adjacent keyword pairs ("shubman","gill" → "shubmangill"). These are
+// highly specific to real multi-word names, so requiring one in a Commons file
+// title gives accurate player matches with ~zero collisions (noise pairs like
+// "sensexnifty" or "awfiscoworking" never appear in any file title → stock).
+function joinedNamePairs(kw: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < Math.min(kw.length - 1, 3); i++) out.push(norm(kw[i] + kw[i + 1]));
+  return out.filter((s) => s.length >= 8);
+}
+
+// `mustInclude` lists the entity name token(s) the matched file's title MUST
+// contain (any one of them) — the relevance gate that stops Commons returning a
+// loosely-related-but-wrong image (e.g. a Polish academy for "Awfis"). If nothing
 // genuinely matches the entity, we return null and the caller falls back to stock.
-async function searchWikimedia(query: string, mustInclude: string): Promise<ArticleImage | null> {
-  const need = norm(mustInclude);
-  if (!query || need.length < 4) return null;
+async function searchWikimedia(query: string, mustInclude: string[]): Promise<ArticleImage | null> {
+  const needs = mustInclude.map(norm).filter((n) => n.length >= 4);
+  if (!query || !needs.length) return null;
   try {
     const url =
       `https://commons.wikimedia.org/w/api.php?action=query&format=json` +
@@ -146,7 +156,8 @@ async function searchWikimedia(query: string, mustInclude: string): Promise<Arti
     const usable = Object.values(pages).filter((p) => {
       const u = (p.imageinfo?.[0]?.url ?? "").toLowerCase();
       const raster = /\.(jpg|jpeg|png)$/.test(u);
-      const titleMatches = norm(p.title ?? "").includes(need);
+      const t = norm(p.title ?? "");
+      const titleMatches = needs.some((n) => t.includes(n));
       return raster && titleMatches;
     });
     if (!usable.length) return null;
@@ -181,9 +192,12 @@ export async function fetchArticleImage(
   //    (e.g. "Awfis" → a Polish sports academy), so we stick to safe stock.
   const c = (category || "").toLowerCase();
   if (c.includes("cricket") && kw.length) {
-    for (const q of [kw.slice(0, 2).join(" "), kw[0]].filter(Boolean) as string[]) {
-      const w = await searchWikimedia(q, kw[0]);
-      if (w) return w;
+    const pairs = joinedNamePairs(kw);
+    if (pairs.length) {
+      for (const q of [kw.slice(0, 3).join(" "), kw.slice(0, 2).join(" ")].filter(Boolean)) {
+        const w = await searchWikimedia(q, pairs);
+        if (w) return w;
+      }
     }
   }
 
