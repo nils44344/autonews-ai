@@ -44,6 +44,10 @@ const schema = z.object({
   // IndexNow key (served at /<key>.txt) — instant search-engine push on publish.
   INDEXNOW_KEY: z.string().optional(),
 
+  // Telegram auto-posting (bot token via secret; channel like "@AutoNewsAI").
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHANNEL: z.string().optional(),
+
   // Image sources — real HD stock photos per article (both free).
   PEXELS_API_KEY: z.string().optional(),
   PIXABAY_API_KEY: z.string().optional(),

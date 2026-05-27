@@ -2,6 +2,7 @@ import { env } from "../env";
 import { prisma } from "../db";
 import { buildInternalLinks, injectAffiliateLinks } from "../seo/internal-links";
 import { pingIndexNow } from "../seo/indexnow";
+import { postToTelegram } from "../social/telegram";
 
 /**
  * Finalise an article for publication:
@@ -71,6 +72,15 @@ export async function approveAndPublish(articleId: string) {
   const urls = [canonical, env.SITE_URL];
   if (article.category?.slug) urls.push(`${env.SITE_URL}/category/${article.category.slug}`);
   void pingIndexNow(urls);
+
+  // Auto-post to the Telegram channel (fire-and-forget — never blocks publish).
+  void postToTelegram({
+    title: updated.title,
+    url: canonical,
+    excerpt: updated.excerpt,
+    imageUrl: updated.ogImage,
+    categorySlug: article.category?.slug ?? null,
+  });
 
   return { published: true, article: updated };
 }
