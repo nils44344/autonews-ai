@@ -94,15 +94,30 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 // Generic cricket words that aren't names — excluded from name-pairing so the
 // real player/team name surfaces (e.g. "shubman gill" instead of "ipl skipper").
 const CRICKET_STOP = new Set(
-  "ipl cricket match test odi t20 t20i team teams vs live stream streaming news sports sport league premier indian india season score scores win loss won lost skipper captain player players fielding batting bowling wicket wickets runs eliminator qualifier final semifinal today watch how when where performance future comeback backs right".split(
+  ("ipl cricket match test odi t20 t20i team teams vs live stream streaming news sports sport league premier indian india season score scores win loss won lost skipper captain player players fielding batting bowling wicket wickets runs eliminator qualifier final semifinal today watch how when where performance future comeback backs right " +
+    // franchise/team words — these pull team LOGOS, not player photos
+    "sunrisers hyderabad rajasthan royals mumbai indians chennai kings kolkata knight riders bangalore bengaluru royal challengers delhi capitals punjab gujarat titans lucknow supergiants super franchise stadium").split(
     " ",
   ),
 );
 
+// File-title words that indicate a graphic/logo rather than a real photo.
+const GRAPHIC = /(logo|flag|crest|emblem|wordmark|colours|jersey|\bkit\b|seal|\bicon\b|symbol|\bmap\b|chart|diagram|poster|banner|trophy|\bcup\b|\bsign\b|label|coat of arms)/;
+
+// A phrase is "name-like" only if it has a real alphabetic token that isn't a
+// generic/team word (so "Suryakumar Yadav" stays, "sunrisers hyderabad" / "ipl
+// 2026 eliminator" are dropped — those would match team logos, not players).
+function isNamey(phrase: string): boolean {
+  return phrase
+    .toLowerCase()
+    .split(/\s+/)
+    .some((t) => /^[a-z]{3,}$/.test(t) && !CRICKET_STOP.has(t));
+}
+
 function nameCandidates(kw: string[]): string[] {
   const top = kw.slice(0, 5).map((k) => k.trim()).filter(Boolean);
   const out: string[] = [];
-  for (const k of top) if (k.includes(" ") && norm(k).length >= 8) out.push(k); // phrase keywords
+  for (const k of top) if (k.includes(" ") && norm(k).length >= 8 && isNamey(k)) out.push(k); // phrase keywords
   // pairs of non-generic single-word keywords (mostly names)
   const names = top.filter((k) => !k.includes(" ") && k.length >= 3 && !CRICKET_STOP.has(k.toLowerCase()));
   for (let i = 0; i < names.length; i++)
@@ -144,7 +159,8 @@ async function searchWikimedia(query: string, mustInclude: string[]): Promise<Ar
       const raster = /\.(jpg|jpeg|png)$/.test(u);
       const t = norm(p.title ?? "");
       const titleMatches = needs.some((n) => t.includes(n));
-      return raster && titleMatches;
+      const isGraphic = GRAPHIC.test((p.title ?? "").toLowerCase()); // skip logos/flags/etc.
+      return raster && titleMatches && !isGraphic;
     });
     if (!usable.length) return null;
     const p = usable[Math.floor(Math.random() * Math.min(usable.length, 4))];
