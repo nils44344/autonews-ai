@@ -19,9 +19,11 @@ const CATEGORY_QUERY: Record<string, string> = {
   india: "india city",
 };
 
+// Longest key first so "entertainment" matches itself, not the "ai" inside it.
+const CATEGORY_KEYS = Object.keys(CATEGORY_QUERY).sort((a, b) => b.length - a.length);
 function categoryQuery(category: string): string {
   const c = (category || "").toLowerCase();
-  for (const k of Object.keys(CATEGORY_QUERY)) if (c.includes(k)) return CATEGORY_QUERY[k];
+  for (const k of CATEGORY_KEYS) if (c.includes(k)) return CATEGORY_QUERY[k];
   return `${c || "india"} news`;
 }
 
@@ -30,6 +32,8 @@ function categoryQuery(category: string): string {
 // generic category image). Curated terms only (all return clean stock), checked
 // before the category fallback. Order = priority.
 const TOPIC_HINTS: [RegExp, string][] = [
+  [/bollywood|\bfilm\b|\bmovie\b|actor|actress|\bott\b|web series|box office|cinema|trailer/i, "bollywood cinema"],
+  [/\bcricket\b|\bipl\b|batsman|bowler|wicket|\bodi\b|\bt20\b/i, "cricket player stadium"],
   [/\bcoal|mining|\bmines?\b/i, "coal mine industry"],
   [/\bgst|tax|supreme court|high court|verdict|ruling|\bcourt\b|lawsuit|\blegal\b|petition/i, "courthouse law gavel"],
   [/gaming|gamer|esports|online game/i, "online gaming controller"],
