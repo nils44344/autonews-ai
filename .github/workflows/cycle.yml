@@ -37,3 +37,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run trends:once
+      # Log estimated daily gpt-oss-120b token burn so we can watch the budget
+      # across cycles (informational — never fails the job).
+      - run: npx tsx scripts/budget-report.ts
+        continue-on-error: true
