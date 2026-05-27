@@ -87,9 +87,10 @@ export default async function HomePage() {
             <p className="mt-4 text-sm font-medium text-white/70">
               {lead.readingMin} min read
               {lead.publishedAt &&
-                ` · ${new Date(lead.publishedAt).toLocaleDateString(undefined, {
+                ` · ${new Date(lead.publishedAt).toLocaleDateString("en-IN", {
                   month: "short",
                   day: "numeric",
+                  timeZone: "Asia/Kolkata",
                 })}`}
             </p>
           </div>

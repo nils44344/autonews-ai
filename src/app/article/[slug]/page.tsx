@@ -110,10 +110,11 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         {a.publishedAt && (
           <span>
             ·{" "}
-            {new Date(a.publishedAt).toLocaleDateString(undefined, {
+            {new Date(a.publishedAt).toLocaleDateString("en-IN", {
               year: "numeric",
               month: "long",
               day: "numeric",
+              timeZone: "Asia/Kolkata",
             })}
           </span>
         )}

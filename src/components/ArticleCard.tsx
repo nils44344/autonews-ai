@@ -47,9 +47,10 @@ export function ArticleCard({ a }: { a: CardArticle }) {
         <div className="mt-auto flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-400 dark:border-slate-800">
           {a.publishedAt && (
             <span>
-              {new Date(a.publishedAt).toLocaleDateString(undefined, {
+              {new Date(a.publishedAt).toLocaleDateString("en-IN", {
                 month: "short",
                 day: "numeric",
+                timeZone: "Asia/Kolkata",
               })}
             </span>
           )}
