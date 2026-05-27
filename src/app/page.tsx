@@ -76,6 +76,8 @@ export default async function HomePage() {
             <img
               src={lead.ogImage}
               alt={lead.title}
+              fetchPriority="high"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (

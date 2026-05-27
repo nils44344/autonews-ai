@@ -75,7 +75,12 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             faqJsonLd(faq),
             breadcrumbJsonLd([
               { name: "Home", url: env.SITE_URL },
-              { name: a.category?.name ?? "News", url: `${env.SITE_URL}/` },
+              {
+                name: a.category?.name ?? "News",
+                url: a.category
+                  ? `${env.SITE_URL}/category/${a.category.slug}`
+                  : `${env.SITE_URL}/`,
+              },
               { name: a.title, url },
             ]),
           ),
@@ -87,7 +92,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           Home
         </Link>
         <span>/</span>
-        <span className="text-slate-700 dark:text-slate-300">{a.category?.name ?? "News"}</span>
+        {a.category ? (
+          <Link href={`/category/${a.category.slug}`} className="hover:text-brand">
+            {a.category.name}
+          </Link>
+        ) : (
+          <span className="text-slate-700 dark:text-slate-300">News</span>
+        )}
       </nav>
 
       {a.category && (
@@ -126,6 +137,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <img
           src={a.ogImage}
           alt={a.title}
+          fetchPriority="high"
+          decoding="async"
           className="mt-6 aspect-video w-full rounded-2xl object-cover"
         />
       )}

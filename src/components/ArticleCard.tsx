@@ -26,6 +26,7 @@ export function ArticleCard({ a }: { a: CardArticle }) {
             src={a.ogImage}
             alt={a.title}
             loading="lazy"
+            decoding="async"
             className="aspect-video w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (

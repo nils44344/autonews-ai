@@ -37,7 +37,10 @@ export async function publishArticle(articleId: string) {
 
 /** Called by the publish gate (auto mode) or by an editor clicking "Approve". */
 export async function approveAndPublish(articleId: string) {
-  const article = await prisma.article.findUniqueOrThrow({ where: { id: articleId } });
+  const article = await prisma.article.findUniqueOrThrow({
+    where: { id: articleId },
+    include: { category: { select: { slug: true } } },
+  });
 
   const bodyWithAffiliates = await injectAffiliateLinks(article.body);
   const path = article.type === "BLOG" ? "blog" : "article";
@@ -62,8 +65,12 @@ export async function approveAndPublish(articleId: string) {
     data: { job: "publish", status: "ok", message: "published", meta: { articleId } },
   });
 
-  // Instant search-engine push (IndexNow). Fire-and-forget — never blocks publish.
-  void pingIndexNow([canonical]);
+  // Instant search-engine push (IndexNow). Also nudge the hub pages this story
+  // now appears on (homepage + its category) so they get re-crawled promptly.
+  // Fire-and-forget — never blocks publish.
+  const urls = [canonical, env.SITE_URL];
+  if (article.category?.slug) urls.push(`${env.SITE_URL}/category/${article.category.slug}`);
+  void pingIndexNow(urls);
 
   return { published: true, article: updated };
 }
