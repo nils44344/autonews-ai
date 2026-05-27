@@ -17,6 +17,11 @@ const nextConfig = {
       "google-trends-api",
     ],
   },
+  async rewrites() {
+    // Serve the Google News sitemap at a clean .xml URL backed by a non-dotted
+    // route (Next doesn't reliably route folders containing a dot).
+    return [{ source: "/news-sitemap.xml", destination: "/news-sitemap" }];
+  },
   async headers() {
     return [
       {
