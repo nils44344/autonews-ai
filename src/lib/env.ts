@@ -38,6 +38,8 @@ const schema = z.object({
   // your own account email and must send from onboarding@resend.dev.
   RESEND_API_KEY: z.string().optional(),
   NEWSLETTER_FROM: z.string().default("AutoNews AI <onboarding@resend.dev>"),
+  // Where the health watchdog emails alerts (set via GitHub secret, not committed).
+  ALERT_EMAIL: z.string().optional(),
 
   // IndexNow key (served at /<key>.txt) — instant search-engine push on publish.
   INDEXNOW_KEY: z.string().optional(),

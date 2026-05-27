@@ -1,0 +1,33 @@
+name: Health watchdog
+
+# 24/7 uptime + content-engine monitor. Emails ALERT_EMAIL when the site is
+# down/erroring, the sitemap breaks, the DB is unreachable, or no fresh articles
+# (engine stalled). One alert per 3h while broken; one "all good" heartbeat/day.
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 min (public repo → free Actions minutes)
+  workflow_dispatch: {}
+
+concurrency:
+  group: health-watchdog
+  cancel-in-progress: true
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: https://autonews-ai.live
+      NEWSLETTER_FROM: "AutoNews AI <news@autonews-ai.live>"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run health
