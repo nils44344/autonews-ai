@@ -18,10 +18,14 @@ export default async function HomePage() {
       }),
       [],
     ),
-    // Most-read published articles — real, clickable links (not raw trend topics).
+    // Most-read articles from the LAST 7 DAYS only — keeps "Trending" fresh so
+    // older posts that slowly accrue views can't dominate forever.
     safe(
       prisma.article.findMany({
-        where: { status: "PUBLISHED" },
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        },
         orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
         take: 7,
         select: { id: true, slug: true, title: true, type: true },
