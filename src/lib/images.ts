@@ -25,6 +25,34 @@ function categoryQuery(category: string): string {
   return `${c || "india"} news`;
 }
 
+// Topic-relevant stock queries keyed off the article TITLE — so a coal story
+// gets mining, a court/GST story gets law/gavel, etc. (much better than a
+// generic category image). Curated terms only (all return clean stock), checked
+// before the category fallback. Order = priority.
+const TOPIC_HINTS: [RegExp, string][] = [
+  [/\bcoal|mining|\bmines?\b/i, "coal mine industry"],
+  [/\bgst|tax|supreme court|high court|verdict|ruling|\bcourt\b|lawsuit|\blegal\b|petition/i, "courthouse law gavel"],
+  [/gaming|gamer|esports|online game/i, "online gaming controller"],
+  [/electric vehicle|\bev\b|e-?scooter|electric scooter|electric car/i, "electric vehicle charging"],
+  [/\boil\b|petrol|diesel|crude|refinery|natural gas/i, "oil refinery industry"],
+  [/\bbank\b|banking|\bloan|\bupi\b|payment|fintech|lending/i, "bank finance building"],
+  [/airline|aviation|\bflight|airport|aircraft/i, "airplane airport"],
+  [/real estate|property market|housing|realty/i, "real estate buildings"],
+  [/crypto|bitcoin|blockchain|ethereum/i, "cryptocurrency coins"],
+  [/pharma|\bdrug\b|medicine|vaccine|hospital|healthcare|hospital/i, "pharmaceutical laboratory"],
+  [/telecom|\b5g\b|\bjio\b|airtel|vodafone|spectrum/i, "telecom tower network"],
+  [/semiconductor|\bchips?\b/i, "semiconductor chip"],
+  [/solar|renewable|wind energy|green energy|clean energy/i, "solar panels renewable energy"],
+  [/automobile|\bcar maker|\bsuv\b|maruti|tata motors|\bauto sales/i, "automobile car factory"],
+  [/\bipo\b|\bofs\b|offer for sale|greenshoe|oversubscribed/i, "stock market trading"],
+];
+
+export function imageQueryFor(category: string, title: string): string {
+  const t = title || "";
+  for (const [re, q] of TOPIC_HINTS) if (re.test(t)) return q;
+  return categoryQuery(category);
+}
+
 export interface ArticleImage {
   url: string;
   credit: string;
@@ -82,8 +110,7 @@ async function pixabayPage(query: string, page: number): Promise<ArticleImage[]>
  * every article a UNIQUE image. Paginates Pexels (+ Pixabay if keyed). The
  * backfill uses this to de-duplicate across all posts.
  */
-export async function fetchImagePool(category: string, minCount: number): Promise<ArticleImage[]> {
-  const query = categoryQuery(category);
+export async function fetchImagePool(query: string, minCount: number): Promise<ArticleImage[]> {
   const seen = new Set<string>();
   const pool: ArticleImage[] = [];
   for (let page = 1; page <= 5 && pool.length < minCount; page++) {
@@ -106,9 +133,10 @@ export async function fetchImagePool(category: string, minCount: number): Promis
  */
 export async function fetchArticleImage(
   category: string,
+  title: string,
   exclude: Set<string> = new Set(),
 ): Promise<ArticleImage | null> {
-  const query = categoryQuery(category);
+  const query = imageQueryFor(category, title);
   for (let page = 1; page <= 5; page++) {
     const batch = [...(await pexelsPage(query, page)), ...(await pixabayPage(query, page))];
     if (!batch.length) break;

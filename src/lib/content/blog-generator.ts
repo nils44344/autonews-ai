@@ -86,7 +86,7 @@ export async function generateBlogCluster(pillarArticleId: string) {
     if (!parsed) continue;
 
     const wc = wordCount(parsed.body);
-    const image = await fetchArticleImage(imgCategory, usedImages);
+    const image = await fetchArticleImage(imgCategory, post.title, usedImages);
     if (image) usedImages.add(image.url); // keep cluster posts unique from each other
 
     const blog = await prisma.article.create({

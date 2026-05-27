@@ -5,6 +5,7 @@ import { fetchArticleImage } from "../images";
 import { readingMinutes, uniqueSlug, wordCount } from "../utils";
 import { HOUSE_STYLE, factCheckPrompt, newsArticlePrompt } from "./prompts";
 import { factCheckArticleSchema, generatedArticleSchema, type GeneratedArticle } from "./schemas";
+import { classifyCategory } from "./classify";
 
 // Length targets. The body must fit the completion-token budget (MAX_TOKENS;
 // ~1 word ≈ 1.4 tokens + JSON/field overhead) AND the request as a whole
@@ -43,13 +44,8 @@ function isFactCheck(topic: TrendTopic): boolean {
   return CONTROVERSY.test(topic.title);
 }
 
-async function ensureCategory(name: string, kind = "news") {
-  const slugified = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  return prisma.category.upsert({
-    where: { slug: slugified },
-    update: {},
-    create: { name, slug: slugified, kind },
-  });
+async function ensureCategory(name: string, slug: string, kind = "news") {
+  return prisma.category.upsert({ where: { slug }, update: {}, create: { name, slug, kind } });
 }
 
 /** Generate a NEWS article from a trend topic and persist it as a DRAFT. */
@@ -69,7 +65,15 @@ export async function writeNewsArticle(topicId: string) {
   // + ClaimReview structured data); everything else is a normal news piece.
   const factCheck = isFactCheck(topic);
   const articleType: "NEWS" | "BLOG" = factCheck ? "NEWS" : classifyType(topic);
-  const categoryName = factCheck ? "Fact Check" : topic.category;
+  // Category from the article's CONTENT (title), not just the source feed —
+  // stops e.g. a GST/court story landing in "Technology".
+  const cls = factCheck
+    ? { name: "Fact Check", slug: "fact-check" }
+    : classifyCategory(topic.title) ?? {
+        name: topic.category,
+        slug: topic.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      };
+  const categoryName = cls.name;
 
   // Smaller models occasionally return a too-short body, wrap the object in an
   // array, or produce JSON Groq's validator rejects. Retry up to 3×; each retry
@@ -118,7 +122,7 @@ export async function writeNewsArticle(topicId: string) {
     }
   }
   if (!parsed) throw lastErr;
-  const category = await ensureCategory(categoryName, "news");
+  const category = await ensureCategory(cls.name, cls.slug, "news");
   const wc = wordCount(parsed.body);
   // Exclude images already used by recent posts so no two articles repeat one.
   const recentImgs = await prisma.article.findMany({
@@ -128,7 +132,7 @@ export async function writeNewsArticle(topicId: string) {
     select: { ogImage: true },
   });
   const usedImages = new Set(recentImgs.map((r) => r.ogImage).filter((u): u is string => !!u));
-  const image = await fetchArticleImage(categoryName, usedImages);
+  const image = await fetchArticleImage(categoryName, topic.title, usedImages);
 
   const article = await prisma.article.create({
     data: {
