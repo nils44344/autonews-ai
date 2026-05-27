@@ -6,24 +6,18 @@ import { readingMinutes, uniqueSlug, wordCount } from "../utils";
 import { HOUSE_STYLE, newsArticlePrompt } from "./prompts";
 import { generatedArticleSchema } from "./schemas";
 
-// Targets are capped so the JSON body fits inside the completion-token budget
-// (MAX_TOKENS below; ~1 word ≈ 1.4 tokens, plus JSON/field overhead). Two hard
-// limits drive this on Groq's free tier:
-//   • a 4000-word target overflowed, truncating the JSON and tripping Groq's
-//     strict `json_object` validator ("Failed to generate JSON");
-//   • Groq caps a single request (prompt + max_tokens) at 6000 TPM, so the
-//     completion reservation can't be too large either.
-// Shorter, tighter pieces from the 8B model are also simply higher quality.
+// Length targets. The body must fit the completion-token budget (MAX_TOKENS;
+// ~1 word ≈ 1.4 tokens + JSON/field overhead) AND the request as a whole
+// (prompt + max_tokens) must stay under the model's per-request TPM cap.
+// gpt-oss-120b allows 8000 TPM, so the structured prompt (~1.8k tokens) plus
+// MAX_TOKENS=5500 (~3.9k words of room) fits with headroom.
 function lengthFor(topic: TrendTopic): { min: number; max: number } {
-  if (topic.isBreaking) return { min: 700, max: 1000 }; // breaking news
-  if (topic.finalScore >= 65) return { min: 1000, max: 1500 }; // major news
-  return { min: 1300, max: 1800 }; // evergreen / deep coverage
+  if (topic.isBreaking) return { min: 800, max: 1100 }; // breaking news
+  if (topic.finalScore >= 65) return { min: 1100, max: 1500 }; // major news
+  return { min: 1200, max: 1600 }; // evergreen / deep coverage
 }
 
-// prompt (~1.5k tokens worst case) + MAX_TOKENS must stay under Groq's 6000
-// per-request TPM cap; 4000 leaves comfortable headroom and still fits an
-// 1800-word body (~3.1k tokens) without truncation.
-const MAX_TOKENS = 4000;
+const MAX_TOKENS = 5500;
 
 // Hard news (an event/announcement) → NEWS section. Evergreen/explainer/opinion
 // topics → BLOG. Keeps the news section to actual news; analysis lives in blog.

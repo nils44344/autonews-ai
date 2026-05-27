@@ -25,6 +25,9 @@ export async function generateBlogCluster(pillarArticleId: string) {
     await generateJSON(blogClusterPrompt(pillar.title, "blog"), {
       system: HOUSE_STYLE,
       temperature: 0.8,
+      // Planning is a small structured task — use the cheap model, save the
+      // premium content model's daily budget for the article bodies.
+      model: "llama-3.1-8b-instant",
     }),
   );
 
@@ -37,10 +40,9 @@ export async function generateBlogCluster(pillarArticleId: string) {
       keywords: post.keywords,
       category: "blog",
       context: `This blog post supports the news story "${pillar.title}". Thesis: ${post.angle}. Intent: ${post.intent}.`,
-      // Capped so the body fits the completion-token budget below (a 3500-word
-      // body overflowed, truncating the JSON and tripping Groq's validator).
-      minWords: 1300,
-      maxWords: 1800,
+      // Capped so the body fits the completion-token budget below.
+      minWords: 1100,
+      maxWords: 1500,
       type: "BLOG",
       angle: post.angle,
     });
@@ -52,7 +54,7 @@ export async function generateBlogCluster(pillarArticleId: string) {
         let raw: unknown = await generateJSON(prompt, {
           system: HOUSE_STYLE,
           temperature: attempt === 1 ? 0.75 : 0.35,
-          maxTokens: 4000, // keep prompt+max_tokens under Groq's 6000 TPM cap
+          maxTokens: 5500, // 120b allows 8000 TPM; fits an 1500-word body
         });
         if (Array.isArray(raw)) raw = raw[0];
         parsed = generatedArticleSchema.parse(raw);

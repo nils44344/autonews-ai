@@ -9,6 +9,9 @@ export interface GenerateOptions {
   maxTokens?: number;
   /** Ask the model to return strict JSON. */
   json?: boolean;
+  /** Override the configured model for this call (e.g. a cheaper model for
+   *  scoring/planning tasks that don't need the premium content model). */
+  model?: string;
 }
 
 export interface LLMProvider {

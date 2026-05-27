@@ -47,6 +47,9 @@ export async function assessArticle(articleId: string): Promise<QualityReport> {
       await generateJSON(qualityRubricPrompt(article.title, article.body), {
         system: HOUSE_STYLE,
         temperature: 0.2,
+        // Scoring is a small judgement task — use the cheap model and keep the
+        // premium content model's daily token budget for writing articles.
+        model: "llama-3.1-8b-instant",
       }),
     );
   } catch {

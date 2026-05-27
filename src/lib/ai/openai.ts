@@ -22,7 +22,7 @@ export class OpenAIProvider implements LLMProvider {
 
   async generate(prompt: string, opts: GenerateOptions = {}): Promise<string> {
     const base = {
-      model: env.OPENAI_MODEL,
+      model: opts.model ?? env.OPENAI_MODEL,
       temperature: opts.temperature ?? 0.7,
       max_tokens: opts.maxTokens ?? 2048,
       messages: [
