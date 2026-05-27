@@ -98,6 +98,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </Link>
                   ))}
                 </nav>
+                <nav className="flex flex-col gap-2 text-sm">
+                  <span className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Company
+                  </span>
+                  <Link href="/about" className="hover:text-white">
+                    About
+                  </Link>
+                  <Link href="/editorial-policy" className="hover:text-white">
+                    Editorial &amp; AI Policy
+                  </Link>
+                  <Link href="/privacy" className="hover:text-white">
+                    Privacy
+                  </Link>
+                  <Link href="/contact" className="hover:text-white">
+                    Contact
+                  </Link>
+                </nav>
               </div>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs">

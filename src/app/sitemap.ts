@@ -29,6 +29,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: env.SITE_URL, changeFrequency: "hourly", priority: 1 },
     { url: `${env.SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${env.SITE_URL}/about`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${env.SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${env.SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${env.SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   // Category hubs — strong internal-link targets; refreshed as new stories land.
