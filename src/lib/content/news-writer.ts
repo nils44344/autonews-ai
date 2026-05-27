@@ -120,10 +120,15 @@ export async function writeNewsArticle(topicId: string) {
   if (!parsed) throw lastErr;
   const category = await ensureCategory(categoryName, "news");
   const wc = wordCount(parsed.body);
-  const image = await fetchArticleImage(
-    categoryName,
-    parsed.keywords.length ? parsed.keywords : topic.keywords,
-  );
+  // Exclude images already used by recent posts so no two articles repeat one.
+  const recentImgs = await prisma.article.findMany({
+    where: { status: "PUBLISHED", ogImage: { not: null } },
+    orderBy: { publishedAt: "desc" },
+    take: 300,
+    select: { ogImage: true },
+  });
+  const usedImages = new Set(recentImgs.map((r) => r.ogImage).filter((u): u is string => !!u));
+  const image = await fetchArticleImage(categoryName, usedImages);
 
   const article = await prisma.article.create({
     data: {

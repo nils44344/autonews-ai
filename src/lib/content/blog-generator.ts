@@ -19,7 +19,20 @@ async function ensureCategory(name: string) {
  * the supporting blog posts. Links each post back to the pillar (news) article.
  */
 export async function generateBlogCluster(pillarArticleId: string) {
-  const pillar = await prisma.article.findUniqueOrThrow({ where: { id: pillarArticleId } });
+  const pillar = await prisma.article.findUniqueOrThrow({
+    where: { id: pillarArticleId },
+    include: { category: { select: { name: true } } },
+  });
+  // Images: use the pillar's topic for relevance, and exclude already-used images
+  // so no two posts repeat one. Grows as each cluster post is created.
+  const imgCategory = pillar.category?.name ?? "blog";
+  const recentImgs = await prisma.article.findMany({
+    where: { status: "PUBLISHED", ogImage: { not: null } },
+    orderBy: { publishedAt: "desc" },
+    take: 300,
+    select: { ogImage: true },
+  });
+  const usedImages = new Set(recentImgs.map((r) => r.ogImage).filter((u): u is string => !!u));
 
   const plan = blogClusterSchema.parse(
     await generateJSON(blogClusterPrompt(pillar.title, "blog"), {
@@ -73,10 +86,8 @@ export async function generateBlogCluster(pillarArticleId: string) {
     if (!parsed) continue;
 
     const wc = wordCount(parsed.body);
-    const image = await fetchArticleImage(
-      "blog", // no fixed section query → uses the post's strongest keyword
-      parsed.keywords.length ? parsed.keywords : post.keywords,
-    );
+    const image = await fetchArticleImage(imgCategory, usedImages);
+    if (image) usedImages.add(image.url); // keep cluster posts unique from each other
 
     const blog = await prisma.article.create({
       data: {
