@@ -117,7 +117,7 @@ export async function runTrendCycle(): Promise<{ topics: number; signals: number
   // the highest-scoring few. Writing all 200-300 clusters per cycle hammered
   // Neon's free tier (connection resets) — and we only ever generate from the
   // top handful anyway.
-  const MAX_PERSIST = 40;
+  const MAX_PERSIST = 80; // wider so lower-scoring sections (entertainment, cricket) survive
   const scored = clusters
     .map((cluster) => {
       const distinctSources = new Set(cluster.signals.map((s) => s.source.id)).size;
