@@ -3,7 +3,7 @@ name: Content cycle
 # Runs in GitHub's cloud on a schedule — no PC required.
 on:
   schedule:
-    - cron: "0 */3 * * *" # every 3 hours (UTC) — 8 cycles/day
+    - cron: "0 */4 * * *" # every 4 hours (UTC) — 6 cycles/day (fits free-tier token caps)
   workflow_dispatch: {} # allow manual "Run workflow" from the Actions tab
 
 concurrency:
