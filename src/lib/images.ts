@@ -14,41 +14,10 @@ const CATEGORY_QUERY: Record<string, string> = {
   india: "india city",
 };
 
-// Short topical anchor appended to a keyword so the photo stays ON-TOPIC while
-// the keyword keeps it varied per article (e.g. "Rajat Patidar" + "cricket").
-const CATEGORY_HINT: Record<string, string> = {
-  cricket: "cricket",
-  ipl: "cricket",
-  markets: "stock market",
-  business: "business",
-  startups: "startup business",
-  tech: "technology",
-  ai: "artificial intelligence",
-  entertainment: "bollywood",
-  india: "india",
-};
-
 function lookup(map: Record<string, string>, category: string): string | null {
   const c = (category || "").toLowerCase();
   for (const k of Object.keys(map)) if (c.includes(k)) return map[k];
   return null;
-}
-
-// Ordered candidate queries, MOST SPECIFIC + ON-TOPIC first. Anchoring the
-// strongest keyword to the category hint ("<keyword> <hint>") keeps the image
-// relevant to the story while varying it per article (fixes both off-topic AND
-// duplicate images). Broader category/generic queries are fallbacks.
-function candidateQueries(category: string, keywords: string[]): string[] {
-  const kw = keywords.map((k) => k.trim()).filter(Boolean);
-  const hint = lookup(CATEGORY_HINT, category);
-  const out: string[] = [];
-  if (kw[0] && hint) out.push(`${kw[0]} ${hint}`); // on-topic + varied
-  if (kw.length >= 2) out.push(kw.slice(0, 2).join(" "));
-  if (kw[0]) out.push(kw[0]);
-  const cq = lookup(CATEGORY_QUERY, category);
-  if (cq) out.push(cq); // relevant generic fallback
-  out.push(`india ${(category || "news").toLowerCase()}`);
-  return [...new Set(out)];
 }
 
 export interface ArticleImage {
@@ -56,13 +25,15 @@ export interface ArticleImage {
   credit: string;
 }
 
-const POOL = 20; // random pick from the top-N results so articles vary
+// Pexels orders by relevance/quality, so a wide pool keeps images on-topic AND
+// high-quality while still varying between same-category articles.
+const POOL = 40;
 
 async function searchPexels(query: string): Promise<ArticleImage | null> {
   if (!env.PEXELS_API_KEY) return null;
   try {
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=30&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=80&orientation=landscape`,
       { headers: { Authorization: env.PEXELS_API_KEY } },
     );
     if (!res.ok) return null;
@@ -85,7 +56,7 @@ async function searchPixabay(query: string): Promise<ArticleImage | null> {
     const res = await fetch(
       `https://pixabay.com/api/?key=${env.PIXABAY_API_KEY}&q=${encodeURIComponent(
         query,
-      )}&image_type=photo&orientation=horizontal&per_page=30&safesearch=true`,
+      )}&image_type=photo&orientation=horizontal&per_page=80&safesearch=true`,
     );
     if (!res.ok) return null;
     const data = (await res.json()) as {
@@ -213,10 +184,15 @@ export async function fetchArticleImage(
     }
   }
 
-  // 2. Stock fallback — category-anchored, randomised provider order.
+  // 2. Stock — use the CATEGORY query (relevant + consistent quality). Variety
+  //    comes from a large random pool, not from noisy keyword queries (those
+  //    pulled off-topic, low-quality images). Generic India fallback last.
+  const queries = [lookup(CATEGORY_QUERY, category), `${c || "india"} news`].filter(
+    Boolean,
+  ) as string[];
   const providers = [searchPexels, searchPixabay];
   if (Math.random() < 0.5) providers.reverse();
-  for (const query of candidateQueries(category, keywords)) {
+  for (const query of queries) {
     for (const provider of providers) {
       const img = await provider(query);
       if (img) return img;
