@@ -6,11 +6,24 @@ import { readingMinutes, uniqueSlug, wordCount } from "../utils";
 import { HOUSE_STYLE, newsArticlePrompt } from "./prompts";
 import { generatedArticleSchema } from "./schemas";
 
+// Targets are capped so the JSON body fits inside the completion-token budget
+// (MAX_TOKENS below; ~1 word ≈ 1.4 tokens, plus JSON/field overhead). Two hard
+// limits drive this on Groq's free tier:
+//   • a 4000-word target overflowed, truncating the JSON and tripping Groq's
+//     strict `json_object` validator ("Failed to generate JSON");
+//   • Groq caps a single request (prompt + max_tokens) at 6000 TPM, so the
+//     completion reservation can't be too large either.
+// Shorter, tighter pieces from the 8B model are also simply higher quality.
 function lengthFor(topic: TrendTopic): { min: number; max: number } {
-  if (topic.isBreaking) return { min: 800, max: 1200 }; // breaking news
-  if (topic.finalScore >= 65) return { min: 1500, max: 2500 }; // major news
-  return { min: 2000, max: 4000 }; // evergreen / deep coverage
+  if (topic.isBreaking) return { min: 700, max: 1000 }; // breaking news
+  if (topic.finalScore >= 65) return { min: 1000, max: 1500 }; // major news
+  return { min: 1300, max: 1800 }; // evergreen / deep coverage
 }
+
+// prompt (~1.5k tokens worst case) + MAX_TOKENS must stay under Groq's 6000
+// per-request TPM cap; 4000 leaves comfortable headroom and still fits an
+// 1800-word body (~3.1k tokens) without truncation.
+const MAX_TOKENS = 4000;
 
 // Hard news (an event/announcement) → NEWS section. Evergreen/explainer/opinion
 // topics → BLOG. Keeps the news section to actual news; analysis lives in blog.
@@ -50,8 +63,10 @@ export async function writeNewsArticle(topicId: string) {
   const { min, max } = lengthFor(topic);
   const articleType = classifyType(topic);
 
-  // Smaller models (8B) occasionally return a too-short body or wrap the object
-  // in an array. Retry once and unwrap arrays before validating.
+  // Smaller models (8B) occasionally return a too-short body, wrap the object in
+  // an array, or produce JSON Groq's validator rejects. Retry up to 3×; each
+  // retry drops the temperature (lower temp = more reliable structure) so a
+  // failed attempt isn't just repeated with identical params.
   const prompt = newsArticlePrompt({
     title: topic.title,
     keywords: topic.keywords,
@@ -63,12 +78,12 @@ export async function writeNewsArticle(topicId: string) {
   });
   let parsed: ReturnType<typeof generatedArticleSchema.parse> | null = null;
   let lastErr: unknown;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       let raw: unknown = await generateJSON(prompt, {
         system: HOUSE_STYLE,
-        temperature: 0.7,
-        maxTokens: 4096,
+        temperature: attempt === 1 ? 0.7 : 0.35,
+        maxTokens: MAX_TOKENS,
       });
       if (Array.isArray(raw)) raw = raw[0];
       parsed = generatedArticleSchema.parse(raw);

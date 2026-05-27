@@ -1,5 +1,6 @@
 import { generateJSON } from "../ai";
 import { prisma } from "../db";
+import { fetchArticleImage } from "../images";
 import { readingMinutes, uniqueSlug, wordCount } from "../utils";
 import { blogClusterPrompt, HOUSE_STYLE, newsArticlePrompt } from "./prompts";
 import { blogClusterSchema, generatedArticleSchema } from "./schemas";
@@ -31,22 +32,43 @@ export async function generateBlogCluster(pillarArticleId: string) {
   const created = [];
 
   for (const post of plan.posts.slice(0, 4)) {
-    const raw = await generateJSON(
-      newsArticlePrompt({
-        title: post.title,
-        keywords: post.keywords,
-        category: "blog",
-        context: `This blog post supports the news story "${pillar.title}". Thesis: ${post.angle}. Intent: ${post.intent}.`,
-        minWords: 2000,
-        maxWords: 3500,
-        type: "BLOG",
-        angle: post.angle,
-      }),
-      { system: HOUSE_STYLE, temperature: 0.75, maxTokens: 4096 },
-    );
+    const prompt = newsArticlePrompt({
+      title: post.title,
+      keywords: post.keywords,
+      category: "blog",
+      context: `This blog post supports the news story "${pillar.title}". Thesis: ${post.angle}. Intent: ${post.intent}.`,
+      // Capped so the body fits the completion-token budget below (a 3500-word
+      // body overflowed, truncating the JSON and tripping Groq's validator).
+      minWords: 1300,
+      maxWords: 1800,
+      type: "BLOG",
+      angle: post.angle,
+    });
 
-    const parsed = generatedArticleSchema.parse(raw);
+    // Retry up to 3×, dropping temperature on retries for more reliable JSON.
+    let parsed: ReturnType<typeof generatedArticleSchema.parse> | null = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        let raw: unknown = await generateJSON(prompt, {
+          system: HOUSE_STYLE,
+          temperature: attempt === 1 ? 0.75 : 0.35,
+          maxTokens: 4000, // keep prompt+max_tokens under Groq's 6000 TPM cap
+        });
+        if (Array.isArray(raw)) raw = raw[0];
+        parsed = generatedArticleSchema.parse(raw);
+        break;
+      } catch {
+        /* try again */
+      }
+    }
+    // One failed post shouldn't sink the whole cluster — skip it and continue.
+    if (!parsed) continue;
+
     const wc = wordCount(parsed.body);
+    const image = await fetchArticleImage(
+      "blog", // no fixed section query → uses the post's strongest keyword
+      parsed.keywords.length ? parsed.keywords : post.keywords,
+    );
 
     const blog = await prisma.article.create({
       data: {
@@ -57,6 +79,7 @@ export async function generateBlogCluster(pillarArticleId: string) {
         dek: parsed.dek,
         body: parsed.body,
         excerpt: parsed.excerpt,
+        ogImage: image?.url,
         seoTitle: parsed.seoTitle || parsed.title,
         seoDescription: parsed.seoDescription || parsed.excerpt,
         keywords: parsed.keywords,
