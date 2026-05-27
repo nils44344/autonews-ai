@@ -13,6 +13,33 @@ export const generatedArticleSchema = z.object({
 });
 export type GeneratedArticle = z.infer<typeof generatedArticleSchema>;
 
+// Fact-check / controversy analysis. Extends a normal article with a single
+// checked claim, an honest rating, and a one-line neutral verdict — the data
+// behind the on-page verdict box and ClaimReview structured data.
+export const FACT_CHECK_RATINGS = [
+  "True",
+  "Mostly True",
+  "Mixed",
+  "Misleading",
+  "Mostly False",
+  "False",
+  "Unproven",
+  "Disputed",
+] as const;
+
+export const factCheckArticleSchema = generatedArticleSchema.extend({
+  claimReviewed: z.string().min(4), // the specific claim being assessed
+  rating: z
+    .string()
+    .transform((s) => {
+      const hit = FACT_CHECK_RATINGS.find((r) => r.toLowerCase() === s.trim().toLowerCase());
+      return hit ?? "Unproven";
+    })
+    .default("Unproven"),
+  verdict: z.string().min(8), // one-sentence neutral conclusion
+});
+export type FactCheckArticle = z.infer<typeof factCheckArticleSchema>;
+
 export const blogClusterSchema = z.object({
   pillar: z.string(),
   posts: z

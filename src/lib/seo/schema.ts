@@ -48,6 +48,48 @@ export function faqJsonLd(faq: { question: string; answer: string }[]) {
   };
 }
 
+// ClaimReview — the fact-check rich result. Maps our 8-point rating scale onto
+// schema.org's 1-5 numeric scale (5 = true, 1 = false) that Google expects.
+const RATING_TO_VALUE: Record<string, number> = {
+  true: 5,
+  "mostly true": 4,
+  mixed: 3,
+  misleading: 2,
+  "mostly false": 2,
+  false: 1,
+  unproven: 3,
+  disputed: 3,
+};
+
+export function claimReviewJsonLd(fc: {
+  claimReviewed: string;
+  rating: string;
+  url: string;
+  datePublished?: string;
+}) {
+  if (!fc?.claimReviewed || !fc?.rating) return null;
+  const value = RATING_TO_VALUE[fc.rating.toLowerCase()] ?? 3;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ClaimReview",
+    url: fc.url,
+    datePublished: fc.datePublished,
+    claimReviewed: fc.claimReviewed,
+    author: { "@type": "Organization", name: env.SITE_NAME, url: env.SITE_URL },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: value,
+      bestRating: 5,
+      worstRating: 1,
+      alternateName: fc.rating,
+    },
+    itemReviewed: {
+      "@type": "Claim",
+      appearance: { "@type": "CreativeWork", url: fc.url },
+    },
+  };
+}
+
 export function breadcrumbJsonLd(crumbs: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",

@@ -3,8 +3,8 @@ import { generateJSON } from "../ai";
 import { prisma } from "../db";
 import { fetchArticleImage } from "../images";
 import { readingMinutes, uniqueSlug, wordCount } from "../utils";
-import { HOUSE_STYLE, newsArticlePrompt } from "./prompts";
-import { generatedArticleSchema } from "./schemas";
+import { HOUSE_STYLE, factCheckPrompt, newsArticlePrompt } from "./prompts";
+import { factCheckArticleSchema, generatedArticleSchema, type GeneratedArticle } from "./schemas";
 
 // Length targets. The body must fit the completion-token budget (MAX_TOKENS;
 // ~1 word ≈ 1.4 tokens + JSON/field overhead) AND the request as a whole
@@ -33,6 +33,16 @@ function classifyType(topic: TrendTopic): "NEWS" | "BLOG" {
   return topic.sourceCount >= 2 ? "NEWS" : "BLOG";
 }
 
+// Dispute/controversy markers → route to the neutral fact-check writer instead
+// of a straight news piece. Deliberately specific (real dispute language) so we
+// don't turn ordinary news into awkward "fact-checks".
+const CONTROVERSY =
+  /\b(controvers(y|ial)|backlash|slammed|criticis(ed|m)|outrage|trolled|sparks? (a )?row|accus(ed|ation)|alleg(ed|ation|edly)|denies|denied|hits? back|clarifies|clarification|disputed?|fact[- ]?check|misleading|fake news|hoax|debunk|rumou?r|snubbed?|apologis|under fire|faces? flak|no[- ]?ball|umpir(e|ing)|\bdrs\b|wrongly|robbed|was .*\b(out|not out)\b)/i;
+
+function isFactCheck(topic: TrendTopic): boolean {
+  return CONTROVERSY.test(topic.title);
+}
+
 async function ensureCategory(name: string, kind = "news") {
   const slugified = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   return prisma.category.upsert({
@@ -55,22 +65,37 @@ export async function writeNewsArticle(topicId: string) {
     .map((s) => `- ${s.title}${s.summary ? `: ${s.summary}` : ""}${s.url ? ` (${s.url})` : ""}`)
     .join("\n");
   const { min, max } = lengthFor(topic);
-  const articleType = classifyType(topic);
+  // Controversy/dispute topics get the neutral fact-check treatment (own section
+  // + ClaimReview structured data); everything else is a normal news piece.
+  const factCheck = isFactCheck(topic);
+  const articleType: "NEWS" | "BLOG" = factCheck ? "NEWS" : classifyType(topic);
+  const categoryName = factCheck ? "Fact Check" : topic.category;
 
-  // Smaller models (8B) occasionally return a too-short body, wrap the object in
-  // an array, or produce JSON Groq's validator rejects. Retry up to 3×; each
-  // retry drops the temperature (lower temp = more reliable structure) so a
-  // failed attempt isn't just repeated with identical params.
-  const prompt = newsArticlePrompt({
-    title: topic.title,
-    keywords: topic.keywords,
-    category: topic.category,
-    context,
-    minWords: min,
-    maxWords: max,
-    type: articleType,
-  });
-  let parsed: ReturnType<typeof generatedArticleSchema.parse> | null = null;
+  // Smaller models occasionally return a too-short body, wrap the object in an
+  // array, or produce JSON Groq's validator rejects. Retry up to 3×; each retry
+  // drops the temperature (lower temp = more reliable structure).
+  const prompt = factCheck
+    ? factCheckPrompt({
+        title: topic.title,
+        keywords: topic.keywords,
+        category: "Fact Check",
+        context,
+        minWords: min,
+        maxWords: max,
+        type: "NEWS",
+      })
+    : newsArticlePrompt({
+        title: topic.title,
+        keywords: topic.keywords,
+        category: topic.category,
+        context,
+        minWords: min,
+        maxWords: max,
+        type: articleType,
+      });
+
+  let parsed: GeneratedArticle | null = null;
+  let fc: { claimReviewed: string; rating: string; verdict: string } | null = null;
   let lastErr: unknown;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
@@ -80,17 +105,23 @@ export async function writeNewsArticle(topicId: string) {
         maxTokens: MAX_TOKENS,
       });
       if (Array.isArray(raw)) raw = raw[0];
-      parsed = generatedArticleSchema.parse(raw);
+      if (factCheck) {
+        const p = factCheckArticleSchema.parse(raw);
+        parsed = p;
+        fc = { claimReviewed: p.claimReviewed, rating: p.rating, verdict: p.verdict };
+      } else {
+        parsed = generatedArticleSchema.parse(raw);
+      }
       break;
     } catch (err) {
       lastErr = err;
     }
   }
   if (!parsed) throw lastErr;
-  const category = await ensureCategory(topic.category, "news");
+  const category = await ensureCategory(categoryName, "news");
   const wc = wordCount(parsed.body);
   const image = await fetchArticleImage(
-    topic.category,
+    categoryName,
     parsed.keywords.length ? parsed.keywords : topic.keywords,
   );
 
@@ -111,6 +142,7 @@ export async function writeNewsArticle(topicId: string) {
       sources: parsed.sources.length
         ? parsed.sources
         : topic.signals.filter((s) => s.url).map((s) => ({ title: s.title, url: s.url })),
+      factCheck: fc ?? undefined,
       wordCount: wc,
       readingMin: readingMinutes(parsed.body),
       categoryId: category.id,

@@ -67,6 +67,50 @@ Return ONLY JSON with this exact shape (no prose outside the JSON):
 }`;
 }
 
+export function factCheckPrompt(b: ArticleBrief): string {
+  return `Write a NEUTRAL, balanced fact-check / controversy analysis about: "${b.title}".
+Category: Fact Check. Primary keywords (use naturally): ${b.keywords.join(", ")}.
+
+Source facts gathered from public feeds — THIS IS YOUR ONLY EVIDENCE. Summarise in your
+own words. Do NOT invent facts, quotes, numbers, dates, or rulings beyond what is here.
+If the evidence is thin or contested, say so explicitly and rate accordingly:
+"""
+${b.context.slice(0, 4000)}
+"""
+
+You are an impartial fact-checker. Rules:
+- Take NO side. Present what each side claims, then weigh it against the evidence/rules above.
+- Never state a disputed thing as settled fact. Attribute claims ("according to…", "critics say…").
+- If the evidence doesn't conclusively settle the claim, the rating MUST be "Unproven" or "Disputed".
+- Pick the rating ONLY from this list: True, Mostly True, Mixed, Misleading, Mostly False, False, Unproven, Disputed.
+
+Body length ${b.minWords}-${b.maxWords} words (HARD minimum ${b.minWords}). Markdown sections,
+each substantial:
+1. An opening paragraph (NO heading) that states plainly what the controversy is and the specific claim in dispute.
+2. ## What actually happened — the established, undisputed facts from the evidence.
+3. ## The claim being checked — state the exact claim, and who is making it.
+4. ## What each side says — present both/all positions fairly, attributed.
+5. ## What the evidence and rules show — weigh it; cite the relevant rule/precedent if given.
+6. ## The verdict — a measured, neutral conclusion (no cheerleading, no outrage).
+7. ## Key takeaways — 3-5 neutral bullet points.
+
+Return ONLY JSON with this exact shape:
+{
+  "title": "neutral, search-friendly headline (<=70 chars), e.g. 'Was X out? The controversy, explained'",
+  "dek": "one-sentence neutral standfirst",
+  "body": "full article in Markdown, all sections above, >= ${b.minWords} words",
+  "excerpt": "2-sentence neutral summary",
+  "seoTitle": "<=60 chars incl main keyword",
+  "seoDescription": "<=155 chars",
+  "keywords": ["6-10 keywords incl 'fact check', the names involved, long-tail"],
+  "faq": [{"question":"...","answer":"..."}],
+  "sources": [{"title":"...","url":"..."}],
+  "claimReviewed": "the single specific claim assessed, as a short statement",
+  "rating": "one of: True | Mostly True | Mixed | Misleading | Mostly False | False | Unproven | Disputed",
+  "verdict": "one neutral sentence stating the conclusion and why"
+}`;
+}
+
 export function blogClusterPrompt(pillarTitle: string, category: string): string {
   return `The newsroom just covered the news topic: "${pillarTitle}" (category: ${category}).
 Propose a topic cluster of 4 supporting blog posts that build SEO authority around it.

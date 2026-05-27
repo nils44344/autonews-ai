@@ -25,6 +25,7 @@ const PALETTES: Record<string, CategoryStyle> = {
   health: { badge: "bg-green-50 text-green-700", dot: "bg-green-500", gradient: "from-green-500 to-emerald-600", ring: "hover:border-green-400" },
   world: { badge: "bg-slate-100 text-slate-700", dot: "bg-slate-500", gradient: "from-slate-600 to-slate-800", ring: "hover:border-slate-400" },
   politics: { badge: "bg-red-50 text-red-700", dot: "bg-red-500", gradient: "from-red-500 to-rose-700", ring: "hover:border-red-400" },
+  fact: { badge: "bg-amber-50 text-amber-700", dot: "bg-amber-500", gradient: "from-amber-500 to-rose-600", ring: "hover:border-amber-400" },
 };
 
 const FALLBACKS: CategoryStyle[] = [

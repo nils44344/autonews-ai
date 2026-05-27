@@ -38,6 +38,7 @@ const sections = [
   { href: "/category/ai", label: "AI" },
   { href: "/category/cricket", label: "Cricket" },
   { href: "/category/entertainment", label: "Entertainment" },
+  { href: "/category/fact-check", label: "Fact Check" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -61,6 +61,8 @@ const categories = [
   { name: "Markets", slug: "markets", kind: "news" },
   { name: "Cricket", slug: "cricket", kind: "news" },
   { name: "Entertainment", slug: "entertainment", kind: "news" },
+  // Fact Check slug matches the news-writer's slugify("Fact Check") = "fact-check".
+  { name: "Fact Check", slug: "fact-check", kind: "news" },
   { name: "Blog", slug: "blog", kind: "blog" },
 ];
 

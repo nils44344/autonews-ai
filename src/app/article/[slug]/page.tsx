@@ -5,9 +5,23 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { renderMarkdown } from "@/lib/markdown";
 import { categoryStyle } from "@/lib/ui";
-import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, ldScript } from "@/lib/seo/schema";
+import {
+  articleJsonLd,
+  breadcrumbJsonLd,
+  claimReviewJsonLd,
+  faqJsonLd,
+  ldScript,
+} from "@/lib/seo/schema";
 
 export const revalidate = 300;
+
+// Colour the fact-check verdict badge by how the claim held up.
+function ratingBadge(rating: string): string {
+  const r = rating.toLowerCase();
+  if (r === "true" || r === "mostly true") return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300";
+  if (r === "false" || r === "mostly false" || r === "misleading") return "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300";
+  return "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"; // mixed / disputed / unproven
+}
 
 async function getArticle(slug: string) {
   return prisma.article.findFirst({
@@ -54,6 +68,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const url = `${env.SITE_URL}/article/${a.slug}`;
   const faq = (a.faq as { question: string; answer: string }[] | null) ?? [];
   const sources = (a.sources as { title: string; url: string }[] | null) ?? [];
+  const factCheck = a.factCheck as { claimReviewed: string; rating: string; verdict: string } | null;
   const c = categoryStyle(a.category?.name);
 
   return (
@@ -73,6 +88,14 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               keywords: a.keywords,
             }),
             faqJsonLd(faq),
+            factCheck
+              ? claimReviewJsonLd({
+                  claimReviewed: factCheck.claimReviewed,
+                  rating: factCheck.rating,
+                  url,
+                  datePublished: a.publishedAt?.toISOString(),
+                })
+              : null,
             breadcrumbJsonLd([
               { name: "Home", url: env.SITE_URL },
               {
@@ -131,6 +154,30 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         )}
         <span>· {a.wordCount.toLocaleString()} words</span>
       </div>
+
+      {factCheck && (
+        <aside className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Our verdict
+            </span>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${ratingBadge(factCheck.rating)}`}
+            >
+              {factCheck.rating}
+            </span>
+          </div>
+          {factCheck.claimReviewed && (
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">Claim checked:</span>{" "}
+              {factCheck.claimReviewed}
+            </p>
+          )}
+          <p className="mt-1.5 text-base font-medium leading-relaxed text-ink dark:text-slate-100">
+            {factCheck.verdict}
+          </p>
+        </aside>
+      )}
 
       {a.ogImage && (
         // eslint-disable-next-line @next/next/no-img-element
