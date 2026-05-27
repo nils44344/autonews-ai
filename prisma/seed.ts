@@ -51,6 +51,22 @@ const sources: { type: SourceType; name: string; url?: string; category: string;
   // ── Entertainment (Bollywood / OTT) ──
   { type: "GOOGLE_NEWS", name: "GNews — Bollywood", url: gnews("Bollywood India entertainment"), category: "entertainment", weight: 1.1 },
   { type: "GOOGLE_NEWS", name: "GNews — OTT & Movies", url: gnews("India OTT web series movie release"), category: "entertainment", weight: 1.0 },
+
+  // ── Controversy / dispute catchers → feed the neutral Fact Check vertical
+  // (these surface "was X out / row / backlash" stories the giants cover thinly). ──
+  { type: "GOOGLE_NEWS", name: "GNews — Cricket Controversy", url: gnews("India cricket umpire decision OR DRS controversy OR no-ball row OR disputed dismissal"), category: "cricket", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — Bollywood Controversy", url: gnews("Bollywood controversy OR trolled OR backlash OR row OR slammed"), category: "entertainment", weight: 1.1 },
+  { type: "GOOGLE_NEWS", name: "GNews — Startup Controversy", url: gnews("Indian startup layoffs OR shutdown OR fraud OR allegation OR controversy"), category: "startups", weight: 1.2 },
+
+  // ── Trending-entity catchers (speed → Google Discover) ──
+  { type: "GOOGLE_NEWS", name: "GNews — AI Launches", url: gnews("India AI launch OR ChatGPT OR Gemini OR OpenAI OR Anthropic"), category: "ai", weight: 1.3 },
+  { type: "GOOGLE_NEWS", name: "GNews — IPO Watch", url: gnews("India IPO listing GMP subscription allotment"), category: "markets", weight: 1.2 },
+
+  // ── Stronger niche outlets (depth / differentiation) ──
+  { type: "RSS", name: "Entrackr", url: "https://entrackr.com/rss", category: "startups", weight: 1.4 },
+  { type: "RSS", name: "BusinessLine", url: "https://www.thehindubusinessline.com/feeder/default.rss", category: "business", weight: 1.1 },
+  { type: "RSS", name: "Sportstar", url: "https://sportstar.thehindu.com/feeder/default.rss", category: "cricket", weight: 1.2 },
+  { type: "RSS", name: "The Hindu — Cricket", url: "https://www.thehindu.com/sport/cricket/feeder/default.rss", category: "cricket", weight: 1.2 },
 ];
 
 const categories = [
