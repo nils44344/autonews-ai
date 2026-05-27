@@ -115,14 +115,29 @@ function stripHtml(s: string): string {
 // actual player/company photos instead of generic stock. No API key needed.
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-// Joined adjacent keyword pairs ("shubman","gill" → "shubmangill"). These are
-// highly specific to real multi-word names, so requiring one in a Commons file
-// title gives accurate player matches with ~zero collisions (noise pairs like
-// "sensexnifty" or "awfiscoworking" never appear in any file title → stock).
-function joinedNamePairs(kw: string[]): string[] {
+// Candidate entity NAMES to search Commons for: multi-word keyword phrases
+// ("Suryakumar Yadav") plus pairs of single-word keywords ("shubman gill"). We
+// search Commons for each name directly (so the query is the name, not noisy
+// keywords) and require the file title to contain that name normalised — giving
+// accurate player photos with ~zero collisions. Capped to limit API calls.
+// Generic cricket words that aren't names — excluded from name-pairing so the
+// real player/team name surfaces (e.g. "shubman gill" instead of "ipl skipper").
+const CRICKET_STOP = new Set(
+  "ipl cricket match test odi t20 t20i team teams vs live stream streaming news sports sport league premier indian india season score scores win loss won lost skipper captain player players fielding batting bowling wicket wickets runs eliminator qualifier final semifinal today watch how when where performance future comeback backs right".split(
+    " ",
+  ),
+);
+
+function nameCandidates(kw: string[]): string[] {
+  const top = kw.slice(0, 5).map((k) => k.trim()).filter(Boolean);
   const out: string[] = [];
-  for (let i = 0; i < Math.min(kw.length - 1, 3); i++) out.push(norm(kw[i] + kw[i + 1]));
-  return out.filter((s) => s.length >= 8);
+  for (const k of top) if (k.includes(" ") && norm(k).length >= 8) out.push(k); // phrase keywords
+  // pairs of non-generic single-word keywords (mostly names)
+  const names = top.filter((k) => !k.includes(" ") && k.length >= 3 && !CRICKET_STOP.has(k.toLowerCase()));
+  for (let i = 0; i < names.length; i++)
+    for (let j = i + 1; j < names.length; j++)
+      if (norm(names[i] + names[j]).length >= 8) out.push(`${names[i]} ${names[j]}`);
+  return [...new Set(out)].slice(0, 6);
 }
 
 // `mustInclude` lists the entity name token(s) the matched file's title MUST
@@ -192,12 +207,9 @@ export async function fetchArticleImage(
   //    (e.g. "Awfis" → a Polish sports academy), so we stick to safe stock.
   const c = (category || "").toLowerCase();
   if (c.includes("cricket") && kw.length) {
-    const pairs = joinedNamePairs(kw);
-    if (pairs.length) {
-      for (const q of [kw.slice(0, 3).join(" "), kw.slice(0, 2).join(" ")].filter(Boolean)) {
-        const w = await searchWikimedia(q, pairs);
-        if (w) return w;
-      }
+    for (const name of nameCandidates(kw)) {
+      const w = await searchWikimedia(name, [norm(name)]); // search the name, require it in the title
+      if (w) return w;
     }
   }
 
