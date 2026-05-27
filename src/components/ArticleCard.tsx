@@ -17,9 +17,9 @@ export function ArticleCard({ a }: { a: CardArticle }) {
   const c = categoryStyle(a.category?.name);
   return (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 ${c.ring}`}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 ${c.ring}`}
     >
-      <Link href={href} className="block overflow-hidden">
+      <div className="block overflow-hidden">
         {a.ogImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -32,7 +32,7 @@ export function ArticleCard({ a }: { a: CardArticle }) {
         ) : (
           <div className={`aspect-video w-full bg-gradient-to-br ${c.gradient}`} />
         )}
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-2 flex items-center gap-2 text-xs">
@@ -48,7 +48,8 @@ export function ArticleCard({ a }: { a: CardArticle }) {
         </div>
 
         <h3 className="break-words font-serif text-lg font-bold leading-snug text-ink transition group-hover:text-brand dark:text-white">
-          <Link href={href} className="hover:underline">
+          {/* Stretched link — makes the ENTIRE card clickable (image, text, Read →) */}
+          <Link href={href} className="after:absolute after:inset-0 hover:underline">
             {a.title}
           </Link>
         </h3>

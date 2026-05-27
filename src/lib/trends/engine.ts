@@ -232,13 +232,33 @@ export async function selectTopTopics(limit: number) {
     take: 200,
   });
 
+  const isDup = (c: (typeof candidates)[number], pool: typeof candidates) =>
+    recent.some((r) => isSameStory(c.title, c.keywords, r.title, r.keywords)) ||
+    pool.some((p) => isSameStory(c.title, c.keywords, p.title, p.keywords));
+
   const picked: typeof candidates = [];
+  const usedCategories = new Set<string>();
+
+  // Pass 1: spread across categories — at most one topic per category — so
+  // sections like Entertainment / Cricket / Fact Check actually get coverage
+  // instead of every slot going to the (usually higher-scoring) business/tech.
   for (const c of candidates) {
     if (picked.length >= limit) break;
-    if (recent.some((r) => isSameStory(c.title, c.keywords, r.title, r.keywords))) continue;
-    if (picked.some((p) => isSameStory(c.title, c.keywords, p.title, p.keywords))) continue;
+    if (usedCategories.has(c.category)) continue;
+    if (isDup(c, picked)) continue;
+    picked.push(c);
+    usedCategories.add(c.category);
+  }
+
+  // Pass 2: if slots remain, fill them with the next best topics by score
+  // (now allowing repeat categories).
+  for (const c of candidates) {
+    if (picked.length >= limit) break;
+    if (picked.includes(c)) continue;
+    if (isDup(c, picked)) continue;
     picked.push(c);
   }
+
   return picked;
 }
 

@@ -38,13 +38,13 @@ until every section below exists and the minimum is met.
 Write the body in Markdown with these sections, each substantial (roughly 150-250 words):
 ${
   isNews
-    ? `1. Lead paragraph — front-load the core fact (who / what / how much / when), inverted-pyramid style.
+    ? `1. An opening paragraph with NO heading (do not write the word "Lead") — front-load the core fact (who / what / how much / when), inverted-pyramid style.
 2. ## What happened — the specifics of the event/announcement.
 3. ## Why it matters — significance and immediate implications.
 4. ## The bigger picture — sector/market context in India, comparable trends or players.
 5. ## What's next — what to watch, likely consequences, stated plans.
 6. ## Key takeaways — 3-5 bullet points for featured-snippet capture.`
-    : `1. Hook — open with the reader's problem or the central question.
+    : `1. An opening paragraph with NO heading (do not write the word "Hook") — draw the reader in with the problem or central question.
 2. ## Background — the context a reader needs, explained plainly.
 3. Two or three ## H2 sections that develop the thesis with specifics and examples.
 4. ## Practical implications — what this means for the reader / what to do.
