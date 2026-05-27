@@ -154,6 +154,7 @@ model Article {
   faq           Json?         // [{question, answer}]
   sources       Json?         // [{title, url}] external citations
   ogImage       String?
+  imageCredit   String?       // attribution for CC/Wikimedia images (legally required)
   factCheck     Json?         // {claimReviewed, rating, verdict} for fact-check pieces
 
   // Quality

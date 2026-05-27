@@ -135,6 +135,7 @@ export async function writeNewsArticle(topicId: string) {
       body: parsed.body,
       excerpt: parsed.excerpt,
       ogImage: image?.url,
+      imageCredit: image?.credit ?? null,
       seoTitle: parsed.seoTitle || parsed.title,
       seoDescription: parsed.seoDescription || parsed.excerpt,
       keywords: parsed.keywords.length ? parsed.keywords : topic.keywords,

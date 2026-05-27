@@ -30,12 +30,15 @@ async function main() {
   let images = 0;
   for (const a of arts) {
     try {
-      const data: { body?: string; ogImage?: string } = {};
+      const data: { body?: string; ogImage?: string; imageCredit?: string } = {};
       const cleaned = stripLeadingLabel(a.body);
       if (cleaned !== a.body) data.body = cleaned;
 
       const img = await fetchArticleImage(a.category?.name ?? "", a.keywords);
-      if (img) data.ogImage = img.url;
+      if (img) {
+        data.ogImage = img.url;
+        data.imageCredit = img.credit;
+      }
 
       if (Object.keys(data).length) {
         await prisma.article.update({ where: { id: a.id }, data });

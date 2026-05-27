@@ -180,14 +180,21 @@ export default async function ArticlePage({ params }: { params: { slug: string }
       )}
 
       {a.ogImage && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={a.ogImage}
-          alt={a.title}
-          fetchPriority="high"
-          decoding="async"
-          className="mt-6 aspect-video w-full rounded-2xl object-cover"
-        />
+        <figure className="mt-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={a.ogImage}
+            alt={a.title}
+            fetchPriority="high"
+            decoding="async"
+            className="aspect-video w-full rounded-2xl object-cover"
+          />
+          {a.imageCredit && (
+            <figcaption className="mt-1.5 text-right text-xs text-slate-400 dark:text-slate-500">
+              {a.imageCredit}
+            </figcaption>
+          )}
+        </figure>
       )}
 
       {a.excerpt && (

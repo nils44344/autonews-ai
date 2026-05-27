@@ -101,18 +101,95 @@ async function searchPixabay(query: string): Promise<ArticleImage | null> {
   }
 }
 
+function stripHtml(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 90);
+}
+
+// Wikimedia Commons — real, FREELY-LICENSED photos of named entities (cricketers,
+// companies, people, places). Commons hosts only free/public-domain media, so it's
+// legal to use WITH attribution (which we store + display). Great for trust:
+// actual player/company photos instead of generic stock. No API key needed.
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// `mustInclude` is the entity name the matched file's title MUST contain — this
+// is the relevance gate that stops Commons returning a loosely-related-but-wrong
+// image (e.g. a Polish coworking photo for an Indian startup). If nothing
+// genuinely matches the entity, we return null and the caller falls back to stock.
+async function searchWikimedia(query: string, mustInclude: string): Promise<ArticleImage | null> {
+  const need = norm(mustInclude);
+  if (!query || need.length < 4) return null;
+  try {
+    const url =
+      `https://commons.wikimedia.org/w/api.php?action=query&format=json` +
+      `&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=12` +
+      `&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1200`;
+    const res = await fetch(url, { headers: { "user-agent": "AutoNewsAI/1.0 (autonews-ai.live)" } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      query?: {
+        pages?: Record<
+          string,
+          {
+            title?: string;
+            imageinfo?: { thumburl?: string; url?: string; extmetadata?: Record<string, { value?: string }> }[];
+          }
+        >;
+      };
+    };
+    const pages = data.query?.pages;
+    if (!pages) return null;
+    // Real raster photo AND the filename must reference the entity.
+    const usable = Object.values(pages).filter((p) => {
+      const u = (p.imageinfo?.[0]?.url ?? "").toLowerCase();
+      const raster = /\.(jpg|jpeg|png)$/.test(u);
+      const titleMatches = norm(p.title ?? "").includes(need);
+      return raster && titleMatches;
+    });
+    if (!usable.length) return null;
+    const p = usable[Math.floor(Math.random() * Math.min(usable.length, 4))];
+    const ii = p.imageinfo![0];
+    const meta = ii.extmetadata ?? {};
+    const src = ii.thumburl || ii.url;
+    if (!src) return null;
+    const artist = stripHtml(meta.Artist?.value ?? "") || "Wikimedia Commons";
+    const license = stripHtml(meta.LicenseShortName?.value ?? "") || "CC";
+    return { url: src, credit: `${artist} / Wikimedia Commons (${license})` };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Fetch a real, relevant landscape HD photo. Tries each candidate query
- * (most specific/on-topic first) across the configured providers (Pexels +
- * Pixabay if keyed), in randomised order for extra variety. Returns the first
- * hit or null. Never throws — images are nice-to-have, not load-bearing.
+ * Fetch a real, relevant HD photo. First tries Wikimedia Commons for the named
+ * entity (real player/company photo, free + attributed); falls back to Pexels/
+ * Pixabay stock (category-anchored) otherwise. Returns {url, credit} or null.
+ * Never throws — images are nice-to-have, not load-bearing.
  */
 export async function fetchArticleImage(
   category: string,
   keywords: string[],
 ): Promise<ArticleImage | null> {
+  const kw = keywords.map((k) => k.trim()).filter(Boolean);
+
+  // 1. Real entity photo from Wikimedia — ONLY for Cricket, where the entity is
+  //    a well-known player/team whose name reliably matches a real Commons photo.
+  //    Elsewhere (companies, markets) name collisions produce wrong images
+  //    (e.g. "Awfis" → a Polish sports academy), so we stick to safe stock.
+  const c = (category || "").toLowerCase();
+  if (c.includes("cricket") && kw.length) {
+    for (const q of [kw.slice(0, 2).join(" "), kw[0]].filter(Boolean) as string[]) {
+      const w = await searchWikimedia(q, kw[0]);
+      if (w) return w;
+    }
+  }
+
+  // 2. Stock fallback — category-anchored, randomised provider order.
   const providers = [searchPexels, searchPixabay];
-  if (Math.random() < 0.5) providers.reverse(); // vary which source wins
+  if (Math.random() < 0.5) providers.reverse();
   for (const query of candidateQueries(category, keywords)) {
     for (const provider of providers) {
       const img = await provider(query);
