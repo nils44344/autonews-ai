@@ -254,9 +254,9 @@ export async function selectTopTopics(limit: number) {
   //  1) the best controversy/dispute topic → becomes a Fact Check
   take(candidates.find((c) => CONTROVERSY_TOPIC.test(c.title)));
   //  2) the best Entertainment topic
+  // (Cricket and the rest are covered by the diversity fill below — no hard
+  //  reserve, so the remaining slots still serve the high-traffic sections.)
   take(candidates.find((c) => c.category === "entertainment"));
-  //  3) the best Cricket topic
-  take(candidates.find((c) => c.category === "cricket"));
 
   // Fill the rest spreading across categories (no repeats), then by pure score.
   const usedCategories = new Set(picked.map((p) => p.category));

@@ -47,33 +47,41 @@ export async function generateBlogCluster(pillarArticleId: string) {
   const category = await ensureCategory("blog");
   const created = [];
 
-  for (const post of plan.posts.slice(0, 4)) {
+  // 2 supporting posts/pillar (was 4): keeps daily blog volume within free-tier
+  // token limits so generation doesn't hit 429s.
+  const posts = plan.posts.slice(0, 2);
+  for (let idx = 0; idx < posts.length; idx++) {
+    const post = posts[idx];
     const prompt = newsArticlePrompt({
       title: post.title,
       keywords: post.keywords,
       category: "blog",
       context: `This blog post supports the news story "${pillar.title}". Thesis: ${post.angle}. Intent: ${post.intent}.`,
-      // Capped so the body fits the completion-token budget below.
-      minWords: 1100,
-      maxWords: 1500,
+      // Shorter target so smaller models close the JSON within budget.
+      minWords: 700,
+      maxWords: 1000,
       type: "BLOG",
       angle: post.angle,
     });
 
-    // Retry up to 3×, dropping temperature on retries for more reliable JSON.
+    // Spread blog bodies across TWO buckets (gpt-oss-20b + llama-3.1-8b) so
+    // neither hits its daily token cap — alternating per post. (News pillars
+    // stay on gpt-oss-120b; QA/planning on 8b.) Each has its own max_tokens to
+    // respect that model's per-request TPM cap.
+    // Blog bodies on gpt-oss-20b (its own daily bucket, separate from the 120b
+    // news bucket). On retry, fall back to 8b so a 20b 429/truncation still
+    // yields a blog. Volume is kept low (2/pillar) so 20b stays under its cap.
+    void idx;
     let parsed: ReturnType<typeof generatedArticleSchema.parse> | null = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
+      const model = attempt === 1 ? "openai/gpt-oss-20b" : "llama-3.1-8b-instant";
+      const maxTokens = model.includes("8b") ? 4000 : 6500;
       try {
         let raw: unknown = await generateJSON(prompt, {
           system: HOUSE_STYLE,
           temperature: attempt === 1 ? 0.75 : 0.35,
-          maxTokens: 5500, // gpt-oss-20b allows 8000 TPM; fits a 1500-word body
-          // Blog bodies are the high-volume part of a cycle. Run them on
-          // gpt-oss-20b — a SEPARATE Groq rate-limit bucket from gpt-oss-120b
-          // (news pillars) and llama-3.1-8b (QA/planning), so the three loads
-          // never compete for the same daily token budget. 20b also writes
-          // longer blogs than 8B (~870 vs ~650 words on the structured prompt).
-          model: "openai/gpt-oss-20b",
+          maxTokens,
+          model,
         });
         if (Array.isArray(raw)) raw = raw[0];
         parsed = generatedArticleSchema.parse(raw);

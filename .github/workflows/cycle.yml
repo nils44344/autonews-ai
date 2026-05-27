@@ -23,7 +23,7 @@ jobs:
       INDEXNOW_KEY: 62c4c8064417c5f1b4294781fda5d215
       PUBLISH_MODE: auto
       MIN_QUALITY_SCORE: "60"
-      TOPICS_PER_CYCLE: "4"
+      TOPICS_PER_CYCLE: "3"
       # Secrets (add these in Settings → Secrets and variables → Actions):
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
