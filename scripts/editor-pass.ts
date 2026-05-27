@@ -12,6 +12,7 @@ import { generateJSON } from "../src/lib/ai";
 import { buildInternalLinks } from "../src/lib/seo/internal-links";
 import { pingIndexNow } from "../src/lib/seo/indexnow";
 import { env } from "../src/lib/env";
+import { stripLeadingLabel } from "./backfill-fix";
 
 const faqSchema = z.object({
   faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
@@ -76,6 +77,13 @@ async function main() {
 
       const links = await buildInternalLinks(a.id);
       if (links.length) added += `+${links.length} links `;
+
+      // Self-heal any leftover "Hook"/"Lead" label at the top of the body.
+      const cleaned = stripLeadingLabel(a.body);
+      if (cleaned !== a.body) {
+        await prisma.article.update({ where: { id: a.id }, data: { body: cleaned } });
+        added += "cleaned ";
+      }
 
       if (added) {
         const url = `${env.SITE_URL}/${a.type === "BLOG" ? "blog" : "article"}/${a.slug}`;
