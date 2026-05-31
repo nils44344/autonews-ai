@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { safe } from "@/lib/safe";
 
+// Regenerate so new articles appear (was being cached as a static build asset).
+export const dynamic = "force-dynamic";
+export const revalidate = 600;
+
 // Dynamic XML sitemap — Next.js serves this at /sitemap.xml automatically.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, categories] = await Promise.all([
