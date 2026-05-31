@@ -1,0 +1,33 @@
+name: X drafts email
+
+# Emails human-style X (Twitter) post drafts for the last 24h of news, so the
+# owner can copy-paste them manually. Built because X killed the free posting
+# tier. Runs once a day; also triggerable manually.
+on:
+  schedule:
+    - cron: "0 3 * * *" # 08:30 IST daily (after the morning digest)
+  workflow_dispatch: {}
+
+jobs:
+  drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE_URL: https://autonews-ai.live
+      AI_PROVIDER: openai
+      OPENAI_BASE_URL: https://api.groq.com/openai/v1
+      OPENAI_MODEL: llama-3.1-8b-instant
+      NEWSLETTER_FROM: "AutoNews AI <news@autonews-ai.live>"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx tsx scripts/x-drafts-email.ts
