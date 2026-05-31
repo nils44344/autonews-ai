@@ -83,8 +83,9 @@ export async function approveAndPublish(articleId: string) {
     categorySlug: article.category?.slug ?? null,
   });
 
-  // Auto-post NEWS to X (skips blogs to stay under the 500/month free-tier cap).
-  if (article.type === "NEWS") {
+  // Auto-post NEWS to X — disabled: X killed the free posting tier (402
+  // CreditsDepleted). Re-enable by setting X_ENABLED=true once on paid plan.
+  if (article.type === "NEWS" && process.env.X_ENABLED === "true") {
     void postToX({ title: updated.title, url: canonical });
   }
 
