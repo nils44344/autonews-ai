@@ -34,6 +34,11 @@ jobs:
       X_API_SECRET: ${{ secrets.X_API_SECRET }}
       X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
       X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+      # Resend + ALERT_EMAIL are required so emailXDraft can fire on each
+      # NEWS publish (keeps the @AutoNewsAI feed live without paid X API).
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+      NEWSLETTER_FROM: "AutoNews AI <news@autonews-ai.live>"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
