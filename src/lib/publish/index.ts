@@ -4,6 +4,7 @@ import { buildInternalLinks, injectAffiliateLinks } from "../seo/internal-links"
 import { pingIndexNow } from "../seo/indexnow";
 import { postToTelegram } from "../social/telegram";
 import { postToX } from "../social/x";
+import { emailXDraft } from "../social/x-draft-email";
 
 /**
  * Finalise an article for publication:
@@ -41,7 +42,7 @@ export async function publishArticle(articleId: string) {
 export async function approveAndPublish(articleId: string) {
   const article = await prisma.article.findUniqueOrThrow({
     where: { id: articleId },
-    include: { category: { select: { slug: true } } },
+    include: { category: { select: { slug: true, name: true } } },
   });
 
   const bodyWithAffiliates = await injectAffiliateLinks(article.body);
@@ -87,6 +88,16 @@ export async function approveAndPublish(articleId: string) {
   // CreditsDepleted). Re-enable by setting X_ENABLED=true once on paid plan.
   if (article.type === "NEWS" && process.env.X_ENABLED === "true") {
     void postToX({ title: updated.title, url: canonical });
+  }
+  // Real-time email of a human-style X draft so the owner can paste-and-post
+  // within seconds (keeps the @AutoNewsAI feed live 24/7 without paid API).
+  if (article.type === "NEWS") {
+    void emailXDraft({
+      title: updated.title,
+      dek: updated.dek,
+      url: canonical,
+      category: article.category?.name ?? null,
+    });
   }
 
   return { published: true, article: updated };
