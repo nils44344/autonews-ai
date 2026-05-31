@@ -3,6 +3,7 @@ import { prisma } from "../db";
 import { buildInternalLinks, injectAffiliateLinks } from "../seo/internal-links";
 import { pingIndexNow } from "../seo/indexnow";
 import { postToTelegram } from "../social/telegram";
+import { postToX } from "../social/x";
 
 /**
  * Finalise an article for publication:
@@ -81,6 +82,11 @@ export async function approveAndPublish(articleId: string) {
     imageUrl: updated.ogImage,
     categorySlug: article.category?.slug ?? null,
   });
+
+  // Auto-post NEWS to X (skips blogs to stay under the 500/month free-tier cap).
+  if (article.type === "NEWS") {
+    void postToX({ title: updated.title, url: canonical });
+  }
 
   return { published: true, article: updated };
 }

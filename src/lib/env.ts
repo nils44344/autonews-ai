@@ -56,6 +56,11 @@ const schema = z.object({
   NEWSAPI_KEY: z.string().optional(),
   YOUTUBE_API_KEY: z.string().optional(),
   X_BEARER_TOKEN: z.string().optional(),
+  // X (Twitter) write — OAuth 1.0a user context. All four required to post.
+  X_API_KEY: z.string().optional(),
+  X_API_SECRET: z.string().optional(),
+  X_ACCESS_TOKEN: z.string().optional(),
+  X_ACCESS_SECRET: z.string().optional(),
 
   PUBLISH_MODE: z.enum(["manual", "auto"]).default("manual"),
   MIN_QUALITY_SCORE: z.coerce.number().min(0).max(100).default(70),
