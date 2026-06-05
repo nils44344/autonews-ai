@@ -271,6 +271,234 @@ model Opportunity {
   @@index([kind])
 }
 
+// ── Tools (Pillar 3 — the SEO engine) ────────────────────────────────────────
+// Curated AI tools with editorial context — never a passive directory. Every
+// entry must answer: why this matters, what opportunity it unlocks, who should
+// use it. Comparisons + rankings come from this table.
+
+enum ToolPricingModel {
+  FREE
+  FREEMIUM
+  PAID
+  SUBSCRIPTION
+  USAGE
+  ENTERPRISE
+}
+
+enum ToolStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Tool {
+  id             String           @id @default(cuid())
+  slug           String           @unique
+  name           String
+  vendor         String?
+  url            String?
+  status         ToolStatus       @default(DRAFT)
+
+  tagline        String
+  overview       String           @db.Text
+  whyItMatters   String           @db.Text
+  useCases       Json?            // ["case 1", "case 2"]
+  pros           Json?            // ["pro 1", ...]
+  cons           Json?            // ["con 1", ...]
+  pricing        ToolPricingModel @default(FREEMIUM)
+  pricingNotes   String?
+  categories     String[]         // ["writing", "code", "voice", ...]
+  alternatives   String[]         // slugs of competing tools
+
+  // Momentum (0-100). Used by "fastest growing" widgets on the homepage.
+  // Refreshed periodically by a scoring job or hand-tuned by editors.
+  popularityScore Float            @default(50)
+  momentumScore   Float            @default(50)
+  trendingScore   Float            @default(50)
+  ranking         Int?             // global rank; null = unranked
+
+  seoTitle       String?
+  seoDescription String?           @db.Text
+  keywords       String[]
+  logoUrl        String?
+  ogImage        String?
+
+  views          Int               @default(0)
+  publishedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([status, momentumScore])
+  @@index([categories])
+}
+
+// ── Workflows (Pillar 4 — the retention engine) ──────────────────────────────
+// A practical, replicable system that stacks 2+ tools to produce an outcome.
+// Each workflow specifies tools used, steps, expected results, time saved.
+
+enum WorkflowKind {
+  CREATOR
+  BUSINESS
+  AUTOMATION
+  DEVELOPER
+  MARKETING
+  TRADING
+  RESEARCH
+}
+
+enum WorkflowStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Workflow {
+  id              String          @id @default(cuid())
+  slug            String          @unique
+  title           String
+  kind            WorkflowKind    @default(BUSINESS)
+  status          WorkflowStatus  @default(DRAFT)
+
+  objective       String          @db.Text
+  toolsRequired   Json?           // [{name, url, role}]
+  steps           Json?           // [{title, detail}] — ordered
+  automationMap   String?         @db.Text // optional textual diagram (mermaid-ish)
+  expectedResults String?         @db.Text
+  timeSavedHours  Float           @default(0)
+  difficultyScore Float           @default(50) // 0-100, higher = harder
+
+  // For homepage "Trending Workflows"
+  popularityScore Float           @default(50)
+
+  seoTitle        String?
+  seoDescription  String?         @db.Text
+  keywords        String[]
+  ogImage         String?
+
+  views           Int             @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status, popularityScore])
+  @@index([kind])
+}
+
+// ── Startup Radar (Pillar 5) ─────────────────────────────────────────────────
+// Tracked AI startups with funding, momentum, breakout indicators. NOT
+// Crunchbase scale — curated to surface companies the user should know about
+// before they're obvious.
+
+enum StartupStage {
+  PRESEED
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C_PLUS
+  PUBLIC
+  ACQUIRED
+  BOOTSTRAPPED
+}
+
+enum StartupStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Startup {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  name            String
+  url             String?
+  status          StartupStatus  @default(DRAFT)
+
+  tagline         String
+  description     String         @db.Text
+  whyItMatters    String         @db.Text
+  category        String         // "voice-ai", "code-ai", "infra", ...
+  hq              String?        // city/country
+  founded         Int?           // year
+  stage           StartupStage   @default(SEED)
+  totalRaisedUsd  Float?         // millions
+  lastRoundUsd    Float?         // millions
+  lastRoundDate   DateTime?
+  investors       String[]
+  signals         Json?          // [{label, value, direction}] arbitrary growth signals
+
+  // Computed/curated 0-100
+  momentumScore   Float          @default(50)
+  isBreakout      Boolean        @default(false)
+
+  seoTitle        String?
+  seoDescription  String?        @db.Text
+  keywords        String[]
+  logoUrl         String?
+  ogImage         String?
+
+  views           Int            @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([status, momentumScore])
+  @@index([category])
+}
+
+// ── Signals (Pillar 2 — live intelligence feed) ──────────────────────────────
+// A Signal is a discrete "what's exploding right now" event: a launch, a viral
+// post, a star burst on a GitHub repo, a funding rumor. Distinct from
+// TrendSignal (which feeds the news engine). Each Signal can link to a Tool /
+// Startup / Opportunity so users can act on it.
+
+enum SignalKind {
+  LAUNCH
+  FUNDING
+  GROWTH       // star burst, follower spike, etc.
+  VIRAL_POST
+  RESEARCH     // paper / breakthrough
+  HIRING
+  ACQUISITION
+}
+
+enum SignalStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Signal {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  title           String
+  kind            SignalKind     @default(LAUNCH)
+  status          SignalStatus   @default(DRAFT)
+
+  summary         String         @db.Text
+  sourceUrl       String?
+  sourceLabel     String?        // "Product Hunt", "Hacker News", "Twitter/X", ...
+
+  // Scoring (0-100). momentum = how fast it's growing; reach = how big the
+  // audience is now; opportunity = how actionable for our users.
+  momentumScore   Float          @default(50)
+  reachScore      Float          @default(50)
+  opportunityScore Float         @default(50)
+  isHot           Boolean        @default(false) // editor or job-promoted
+
+  // Optional links into other pillars so a Signal turns into action.
+  toolSlug        String?
+  startupSlug     String?
+  opportunitySlug String?
+
+  observedAt      DateTime       @default(now())
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([status, observedAt])
+  @@index([momentumScore])
+}
+
 // ── Memes ────────────────────────────────────────────────────────────────────
 
 enum MemeStatus {

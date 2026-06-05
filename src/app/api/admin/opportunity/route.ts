@@ -85,9 +85,11 @@ export async function POST(req: Request) {
     whyItMatters: d.whyItMatters,
     marketContext: d.marketContext,
     implementation: d.implementation,
-    monetizationPaths: d.monetizationPaths ?? null,
-    recommendedTools: d.recommendedTools ?? null,
-    relatedWorkflows: d.relatedWorkflows ?? null,
+    // Prisma JSON columns don't accept literal null in the typed input — use
+    // undefined to skip the field, which leaves it null in the DB.
+    monetizationPaths: d.monetizationPaths ?? undefined,
+    recommendedTools: d.recommendedTools ?? undefined,
+    relatedWorkflows: d.relatedWorkflows ?? undefined,
     relatedArticleIds: d.relatedArticleIds ?? [],
     demandScore: d.demandScore,
     growthScore: d.growthScore,

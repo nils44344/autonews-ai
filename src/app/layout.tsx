@@ -27,13 +27,18 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+// Full 6-pillar nav. Order = priority per the product vision: Opportunities
+// (the moat) first, Signals (live intelligence), Tools (SEO engine), Workflows
+// (retention), Startups (radar), News (supporting). Blog and category pages
+// continue to work — they are reached via /news and category links.
 const nav = [
   { href: "/", label: "Home" },
-  // Opportunities is the platform's new flagship surface (Pillar 1). It sits
-  // above Blog so visitors immediately see actionable intelligence, not just
-  // news — without removing anything that already worked.
   { href: "/opportunities", label: "Opportunities" },
-  { href: "/blog", label: "Blog" },
+  { href: "/signals", label: "Signals" },
+  { href: "/tools", label: "Tools" },
+  { href: "/workflows", label: "Workflows" },
+  { href: "/startups", label: "Startups" },
+  { href: "/news", label: "News" },
 ];
 
 // Section nav — the category portal bar. Order = editorial priority for an
