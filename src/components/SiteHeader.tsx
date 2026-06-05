@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { RoleBadge } from "./Personalization";
 
 interface NavItem { href: string; label: string }
 
@@ -85,7 +86,17 @@ export function SiteHeader({ siteName, nav }: { siteName: string; nav: NavItem[]
         </button>
 
         {/* Right cluster */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <RoleBadge />
+          <Link
+            href="/watchlist"
+            aria-label="Watchlist"
+            className="hidden h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-canvas-elevated dark:hover:text-white md:grid"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+            </svg>
+          </Link>
           <button
             type="button"
             aria-label="Toggle theme"

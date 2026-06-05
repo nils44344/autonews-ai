@@ -6,6 +6,8 @@ import { env } from "@/lib/env";
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CommandPalette } from "@/components/CommandPalette";
+import { BottomNav } from "@/components/BottomNav";
+import { PersonalizationOnboarding } from "@/components/Personalization";
 import "./globals.css";
 
 // AdSense publisher ID — loads auto-ads + serves as the verification snippet.
@@ -55,10 +57,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <SiteHeader siteName={env.SITE_NAME} nav={nav} />
         <CommandPalette />
+        <PersonalizationOnboarding />
 
-        <main className="mx-auto w-full max-w-content flex-1 px-5 py-10 sm:px-6 md:py-14">
+        <main className="mx-auto w-full max-w-content flex-1 px-5 pb-24 pt-10 sm:px-6 md:pb-14 md:pt-14">
           {children}
         </main>
+
+        <BottomNav />
 
         <footer className="border-t border-slate-900 bg-canvas-raised text-slate-400">
           <div className="mx-auto max-w-content px-5 py-12 sm:px-6">
