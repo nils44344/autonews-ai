@@ -2,13 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark-first design tokens. Light values kept for the toggle, but the default
+ * experience is the deep-graphite intelligence look (Bloomberg + Linear). */
 :root {
-  --bg: #f8fafc;
-  --fg: #0b1120;
+  --bg: #ffffff;
+  --fg: #0a0d14;
+  --panel: #f8fafc;
+  --border: #e2e8f0;
+}
+html.dark {
+  --bg: #0a0d14;
+  --fg: #e6eaf2;
+  --panel: #0f1320;
+  --border: #1e2540;
 }
 
 html {
   scroll-behavior: smooth;
+  color-scheme: dark light;
 }
 
 body {
@@ -16,53 +27,68 @@ body {
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv01", "cv11";
 }
 
-/* Lightweight prose styles for rendered article markdown (no plugin needed). */
+/* Selection — uses the Signal accent so highlights look intentional. */
+::selection { background: rgba(59, 130, 246, 0.35); color: #fff; }
+
+/* Premium scrollbar (webkit only — Firefox uses default). */
+.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+.dark ::-webkit-scrollbar-track { background: transparent; }
+.dark ::-webkit-scrollbar-thumb { background: #1e2540; border-radius: 8px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #2a3457; }
+
+/* Card primitive: subtle border + soft shadow + 1.01 hover.
+ * Used everywhere; gives the platform a unified, premium feel. */
+.card {
+  @apply rounded-2xl border border-slate-200/80 bg-white shadow-card transition duration-200;
+}
+.dark .card {
+  @apply border-slate-800/80 bg-canvas-raised;
+}
+.card-hover {
+  @apply hover:-translate-y-0.5 hover:shadow-card-hover;
+}
+
+/* Prose styles for article markdown — tightened, no magazine drop cap. */
 .prose {
-  @apply text-[1.075rem] leading-8 text-slate-700 dark:text-slate-300;
+  @apply text-[1.05rem] leading-8 text-slate-700 dark:text-slate-300;
   overflow-wrap: break-word;
 }
 .prose pre {
-  @apply my-5 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
+  @apply my-5 overflow-x-auto rounded-xl bg-slate-900 p-4 text-sm text-slate-100;
 }
 .prose h2 {
-  @apply mt-12 mb-4 font-serif text-2xl font-bold tracking-tight text-ink dark:text-white;
+  @apply mt-12 mb-4 font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
 }
 .prose h3 {
-  @apply mt-8 mb-2 font-serif text-xl font-semibold text-ink dark:text-white;
+  @apply mt-8 mb-2 font-display text-xl font-semibold text-slate-900 dark:text-white;
 }
-.prose p {
-  @apply my-5 leading-8;
-}
-/* Magazine-style drop cap on the opening paragraph. */
-.prose > p:first-of-type::first-letter {
-  @apply float-left mr-3 mt-1 font-serif text-6xl font-bold leading-[0.8] text-brand;
-}
-.prose ul {
-  @apply my-5 list-disc space-y-2 pl-6;
-}
-.prose ol {
-  @apply my-5 list-decimal space-y-2 pl-6;
-}
-.prose li {
-  @apply leading-7;
-}
+.prose p { @apply my-5 leading-8; }
+.prose ul { @apply my-5 list-disc space-y-2 pl-6; }
+.prose ol { @apply my-5 list-decimal space-y-2 pl-6; }
+.prose li { @apply leading-7; }
 .prose a {
-  @apply font-medium text-brand underline underline-offset-2 transition hover:text-brand-dark dark:text-brand-light;
+  @apply font-medium text-signal underline underline-offset-2 transition hover:text-signal/80;
 }
-.prose strong {
-  @apply font-semibold text-ink dark:text-white;
-}
+.prose strong { @apply font-semibold text-slate-900 dark:text-white; }
 .prose blockquote {
-  @apply my-7 rounded-r-lg border-l-4 border-brand bg-slate-50 py-2 pl-5 pr-4 italic text-slate-600 dark:bg-slate-800/60 dark:text-slate-300;
+  @apply my-7 rounded-r-lg border-l-4 border-signal bg-slate-50 py-2 pl-5 pr-4 italic text-slate-600 dark:bg-slate-900/60 dark:text-slate-300;
 }
 .prose code {
   @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-800 dark:bg-slate-800 dark:text-slate-200;
 }
-.prose hr {
-  @apply my-10 border-slate-200 dark:border-slate-800;
-}
-.prose img {
-  @apply my-6 rounded-xl;
+.prose hr { @apply my-10 border-slate-200 dark:border-slate-800; }
+.prose img { @apply my-6 rounded-xl; }
+
+/* Subtle premium grid background — opt-in on hero/landing surfaces.
+ * Pure CSS; no images, no SVG, no performance cost. */
+.grid-bg {
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(168, 85, 247, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 100%, rgba(59, 130, 246, 0.12), transparent 40%),
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px;
 }

@@ -31,6 +31,7 @@
     "bullmq": "^5.34.0",
     "cheerio": "^1.0.0",
     "date-fns": "^4.1.0",
+    "geist": "^1.7.2",
     "google-trends-api": "^4.9.2",
     "ioredis": "^5.4.2",
     "next": "^14.2.35",

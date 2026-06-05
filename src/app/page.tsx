@@ -4,26 +4,24 @@ import { safe } from "@/lib/safe";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { scoreTier } from "@/lib/opportunity-score";
 
-// New homepage — Intelligence Dashboard. Per the product vision: this is NOT a
-// news feed. Order: Hero → Trending Opportunities → Live Signals → Fastest
-// Growing Tools → Trending Workflows → Startup Radar → Latest News → Newsletter.
-// News drops to the bottom; the 5 intelligence pillars come first.
+// Intelligence-dashboard homepage. Above the fold = hero + search + top 3
+// opportunities ONLY (brief: "users should immediately understand what matters
+// today"). Everything else lives below; sections are far apart so the page
+// reads as a designed product, not a feed.
+
 export const revalidate = 120;
 
-// Local row types so safe<T>() falls back correctly when the DB is offline
-// during build (otherwise Prisma's inferred type fights the [] fallback).
 type NewsRow = {
   id: string; slug: string; title: string; dek: string | null;
   publishedAt: Date | null;
   category: { name: string } | null;
 };
 
-const OPP_KIND_LABEL: Record<string, string> = {
+const OPP_KIND: Record<string, string> = {
   BUSINESS: "Business", STARTUP: "Startup", AUTOMATION: "Automation",
   CREATOR: "Creator", AGENCY: "Agency", NICHE: "Niche", MONETIZATION: "Monetization",
 };
-
-const SIG_KIND_LABEL: Record<string, string> = {
+const SIG_KIND: Record<string, string> = {
   LAUNCH: "Launch", FUNDING: "Funding", GROWTH: "Growth",
   VIRAL_POST: "Viral", RESEARCH: "Research", HIRING: "Hiring", ACQUISITION: "Acquisition",
 };
@@ -36,24 +34,24 @@ function rel(d: Date): string {
 }
 
 export default async function HomePage() {
-  const [opportunities, signals, tools, workflows, startups, news] = await Promise.all([
+  const [topOpps, signals, tools, workflows, startups, news] = await Promise.all([
     safe(prisma.opportunity.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { opportunityScore: "desc" },
-      take: 4,
-      select: { id: true, slug: true, title: true, summary: true, kind: true, opportunityScore: true },
+      take: 3,
+      select: { id: true, slug: true, title: true, summary: true, kind: true, opportunityScore: true, growthScore: true, demandScore: true, competitionScore: true },
     }), [] as Awaited<ReturnType<typeof prisma.opportunity.findMany>>),
     safe(prisma.signal.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ isHot: "desc" }, { momentumScore: "desc" }],
-      take: 6,
-      select: { id: true, slug: true, title: true, kind: true, summary: true, momentumScore: true, isHot: true, observedAt: true, sourceLabel: true, toolSlug: true, opportunitySlug: true },
+      take: 5,
+      select: { id: true, slug: true, title: true, kind: true, momentumScore: true, isHot: true, observedAt: true, sourceLabel: true },
     }), [] as Awaited<ReturnType<typeof prisma.signal.findMany>>),
     safe(prisma.tool.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { momentumScore: "desc" },
       take: 6,
-      select: { id: true, slug: true, name: true, tagline: true, vendor: true, momentumScore: true, ranking: true },
+      select: { id: true, slug: true, name: true, tagline: true, vendor: true, momentumScore: true, ranking: true, categories: true },
     }), [] as Awaited<ReturnType<typeof prisma.tool.findMany>>),
     safe(prisma.workflow.findMany({
       where: { status: "PUBLISHED" },
@@ -64,246 +62,274 @@ export default async function HomePage() {
     safe(prisma.startup.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ isBreakout: "desc" }, { momentumScore: "desc" }],
-      take: 6,
-      select: { id: true, slug: true, name: true, tagline: true, momentumScore: true, isBreakout: true, stage: true, hq: true },
+      take: 4,
+      select: { id: true, slug: true, name: true, tagline: true, momentumScore: true, isBreakout: true, stage: true, hq: true, totalRaisedUsd: true },
     }), [] as Awaited<ReturnType<typeof prisma.startup.findMany>>),
     safe<NewsRow[]>(prisma.article.findMany({
       where: { status: "PUBLISHED", type: "NEWS" },
       orderBy: { publishedAt: "desc" },
-      take: 6,
+      take: 4,
       select: { id: true, slug: true, title: true, dek: true, publishedAt: true, category: { select: { name: true } } },
     }) as Promise<NewsRow[]>, []),
   ]);
 
   return (
-    <div className="space-y-12">
-      {/* HERO */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-white md:p-14">
-        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="relative max-w-3xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> AI Intelligence Platform
+    <div className="space-y-24 md:space-y-28">
+      {/* ─── HERO + SEARCH + TOP OPPORTUNITIES (above the fold) ────────── */}
+      <section className="relative -mx-5 -mt-10 overflow-hidden border-b border-slate-900/60 px-5 pb-12 pt-14 sm:-mx-6 sm:px-6 md:-mt-14 md:pb-20 md:pt-24">
+        <div className="absolute inset-0 -z-10 grid-bg opacity-90" />
+        <div className="mx-auto max-w-content">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-opportunity/30 bg-opportunity/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-opportunity">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-opportunity" />
+            AI Intelligence Platform
           </div>
-          <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
-            Discover AI opportunities before everyone else.
+          <h1 className="font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-[4rem]">
+            Discover AI opportunities <br className="hidden sm:block" />
+            <span className="bg-gradient-to-r from-opportunity via-signal to-tool bg-clip-text text-transparent">
+              before everyone else.
+            </span>
           </h1>
-          <p className="mt-5 max-w-2xl text-base text-slate-300 md:text-lg">
-            Track AI trends, tools, workflows, startups, and market signals in one place. Stop reading what happened. Start building what's next.
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
+            Track opportunities, signals, tools, workflows, and startups in one place. Stop reading what happened. Start building what&apos;s next.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/opportunities" className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-100">
-              Explore Opportunities →
-            </Link>
-            <Link href="/signals" className="rounded-lg border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10">
-              Live Signals
-            </Link>
-          </div>
+
+          {/* Search prompt — visual CTA into the command palette. */}
+          <SearchPrompt />
+
+          {/* Three top opportunities right under the fold. Nothing else. */}
+          {topOpps.length > 0 && (
+            <div className="mt-12 grid gap-4 sm:grid-cols-3">
+              {topOpps.map((o) => {
+                const tier = scoreTier(o.opportunityScore);
+                return (
+                  <Link key={o.id} href={`/opportunities/${o.slug}`}
+                    className="card card-hover group flex flex-col p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="rounded-full bg-opportunity/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-opportunity">
+                        {OPP_KIND[o.kind] ?? o.kind}
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className={`text-[10px] font-bold uppercase ${tier.color}`}>{tier.label}</span>
+                        <span className="font-display text-2xl font-extrabold tabular-nums text-white">
+                          {o.opportunityScore.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                    <h3 className="font-display text-base font-bold leading-snug text-white group-hover:text-opportunity">
+                      {o.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-[13px] text-slate-400">{o.summary}</p>
+                    <div className="mt-4 grid grid-cols-3 gap-1.5">
+                      <Mini label="Demand" v={o.demandScore} />
+                      <Mini label="Growth" v={o.growthScore} />
+                      <Mini label="Comp" v={o.competitionScore} invert />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* TRENDING OPPORTUNITIES */}
-      <section>
-        <SectionHeader title="Trending Opportunities" href="/opportunities" accent="emerald" />
-        <ul className="grid gap-5 md:grid-cols-2">
-          {opportunities.map((o) => {
-            const tier = scoreTier(o.opportunityScore);
-            return (
-              <li key={o.id}
-                className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-700">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    {OPP_KIND_LABEL[o.kind] ?? o.kind}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold uppercase ${tier.color}`}>{tier.label}</span>
-                    <span className="font-display text-2xl font-extrabold tabular-nums text-slate-900 dark:text-white">
-                      {o.opportunityScore.toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-                <Link href={`/opportunities/${o.slug}`}
-                  className="font-display text-lg font-bold leading-snug text-slate-900 group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-300">
-                  {o.title}
-                </Link>
-                <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{o.summary}</p>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      {/* LIVE SIGNALS */}
-      <section>
-        <SectionHeader title="Live AI Signals" href="/signals" accent="orange" subtitle="What's exploding right now" />
-        <ul className="space-y-2">
+      {/* ─── LIVE SIGNALS ────────────────────────────────────────────── */}
+      <Section
+        kicker="Live"
+        title="What's exploding right now"
+        href="/signals"
+        accent="signal"
+      >
+        <ul className="grid gap-3">
           {signals.map((s) => (
-            <li key={s.id}
-              className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-orange-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-orange-700">
-              <div className="flex w-12 shrink-0 flex-col items-center">
-                <div className="font-display text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
-                  {s.momentumScore.toFixed(0)}
-                </div>
-                <div className="text-[9px] uppercase text-slate-500">mtm</div>
+            <li key={s.id} className="card card-hover group flex items-center gap-4 p-4">
+              <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-signal/10 py-2">
+                <div className="font-display text-xl font-extrabold tabular-nums text-signal">{s.momentumScore.toFixed(0)}</div>
+                <div className="text-[9px] uppercase tracking-wider text-signal/70">mtm</div>
               </div>
-              <div className="flex-1">
-                <div className="mb-0.5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wider">
-                  <span className="rounded-full bg-orange-50 px-1.5 py-0.5 font-semibold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
-                    {SIG_KIND_LABEL[s.kind] ?? s.kind}
-                  </span>
-                  {s.isHot && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 font-bold text-white">HOT</span>}
-                  <span className="text-slate-500">{s.sourceLabel ?? "—"}</span>
-                  <span className="text-slate-400">· {rel(s.observedAt)}</span>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wider text-slate-500">
+                  <span className="rounded bg-signal/15 px-1.5 py-0.5 font-semibold text-signal">{SIG_KIND[s.kind] ?? s.kind}</span>
+                  {s.isHot && <span className="rounded bg-warning/20 px-1.5 py-0.5 font-bold text-warning">HOT</span>}
+                  <span>{s.sourceLabel ?? "—"}</span>
+                  <span className="text-slate-600">· {rel(s.observedAt)}</span>
                 </div>
-                <Link href="/signals" className="font-display text-base font-bold leading-snug text-slate-900 group-hover:text-orange-700 dark:text-white dark:group-hover:text-orange-300">
+                <Link href="/signals" className="font-display text-[15px] font-semibold leading-snug text-white group-hover:text-signal">
                   {s.title}
                 </Link>
               </div>
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
-      {/* FASTEST GROWING TOOLS */}
-      <section>
-        <SectionHeader title="Fastest Growing Tools" href="/tools" accent="sky" />
+      {/* ─── FASTEST GROWING TOOLS ───────────────────────────────────── */}
+      <Section
+        kicker="Tools"
+        title="Fastest growing right now"
+        href="/tools"
+        accent="tool"
+      >
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tools.map((t) => (
-            <li key={t.id}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-sky-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700">
-              <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-                {t.ranking && <span>#{t.ranking}</span>}
-                <span className="ml-auto font-display font-bold tabular-nums text-sky-600 dark:text-sky-400">
-                  {t.momentumScore.toFixed(0)}
-                </span>
+            <li key={t.id} className="card card-hover group p-5">
+              <div className="mb-2 flex items-center justify-between text-[11px]">
+                <span className="font-mono text-slate-500">{t.ranking ? `#${String(t.ranking).padStart(2, "0")}` : ""}</span>
+                <span className="font-display font-extrabold tabular-nums text-tool">{t.momentumScore.toFixed(0)}</span>
               </div>
-              <Link href={`/tools/${t.slug}`}
-                className="font-display text-base font-extrabold text-slate-900 group-hover:text-sky-700 dark:text-white dark:group-hover:text-sky-300">
+              <Link href={`/tools/${t.slug}`} className="font-display text-base font-bold text-white group-hover:text-tool">
                 {t.name}
               </Link>
-              {t.vendor && <div className="text-xs text-slate-500">{t.vendor}</div>}
-              <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{t.tagline}</p>
+              {t.vendor && <div className="text-[11px] text-slate-500">{t.vendor}</div>}
+              <p className="mt-2 line-clamp-2 text-[13px] text-slate-400">{t.tagline}</p>
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
-      {/* TRENDING WORKFLOWS */}
-      <section>
-        <SectionHeader title="Trending Workflows" href="/workflows" accent="violet" />
+      {/* ─── TRENDING WORKFLOWS ──────────────────────────────────────── */}
+      <Section
+        kicker="Workflows"
+        title="Systems you can copy today"
+        href="/workflows"
+        accent="workflow"
+      >
         <ul className="grid gap-4 sm:grid-cols-2">
           {workflows.map((w) => (
-            <li key={w.id}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-violet-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-700">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <span className="rounded-full bg-violet-50 px-1.5 py-0.5 font-semibold uppercase tracking-wider text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
-                  {w.kind}
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400">saves {w.timeSavedHours.toFixed(1)}h</span>
+            <li key={w.id} className="card card-hover group p-5">
+              <div className="mb-2 flex items-center justify-between text-[11px]">
+                <span className="rounded bg-workflow/15 px-1.5 py-0.5 font-semibold uppercase tracking-wider text-workflow">{w.kind}</span>
+                <span className="text-growth">saves {w.timeSavedHours.toFixed(1)}h</span>
               </div>
-              <Link href={`/workflows/${w.slug}`}
-                className="font-display text-base font-bold text-slate-900 group-hover:text-violet-700 dark:text-white dark:group-hover:text-violet-300">
+              <Link href={`/workflows/${w.slug}`} className="font-display text-base font-bold text-white group-hover:text-workflow">
                 {w.title}
               </Link>
-              <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{w.objective}</p>
+              <p className="mt-2 line-clamp-2 text-[13px] text-slate-400">{w.objective}</p>
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
-      {/* STARTUP RADAR */}
-      <section>
-        <SectionHeader title="Startup Radar" href="/startups" accent="rose" subtitle="Breakouts worth tracking" />
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* ─── STARTUP RADAR ───────────────────────────────────────────── */}
+      <Section
+        kicker="Startup Radar"
+        title="Breakouts worth tracking"
+        href="/startups"
+        accent="startup"
+      >
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {startups.map((s) => (
-            <li key={s.id}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-rose-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-rose-700">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <div className="flex gap-1.5">
-                  {s.isBreakout && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">BREAKOUT</span>}
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 font-semibold uppercase tracking-wider text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {s.stage.replace("_", " ")}
-                  </span>
-                </div>
-                <span className="font-display font-bold tabular-nums text-rose-600 dark:text-rose-400">
-                  {s.momentumScore.toFixed(0)}
-                </span>
+            <li key={s.id} className="card card-hover group p-5">
+              <div className="mb-2 flex items-center justify-between text-[11px]">
+                {s.isBreakout ? (
+                  <span className="rounded bg-startup/20 px-1.5 py-0.5 font-bold uppercase tracking-wider text-startup">Breakout</span>
+                ) : (
+                  <span className="rounded border border-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">{s.stage.replace("_", " ")}</span>
+                )}
+                <span className="font-display font-extrabold tabular-nums text-startup">{s.momentumScore.toFixed(0)}</span>
               </div>
-              <Link href={`/startups/${s.slug}`}
-                className="font-display text-base font-extrabold text-slate-900 group-hover:text-rose-700 dark:text-white dark:group-hover:text-rose-300">
+              <Link href={`/startups/${s.slug}`} className="font-display text-base font-bold text-white group-hover:text-startup">
                 {s.name}
               </Link>
-              {s.hq && <div className="text-xs text-slate-500">{s.hq}</div>}
-              <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{s.tagline}</p>
+              {s.hq && <div className="text-[11px] text-slate-500">{s.hq}</div>}
+              <p className="mt-2 line-clamp-2 text-[13px] text-slate-400">{s.tagline}</p>
+              {s.totalRaisedUsd ? (
+                <div className="mt-3 text-[11px] text-slate-500">
+                  Raised <span className="font-bold text-growth">${s.totalRaisedUsd.toFixed(0)}M</span>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
-      </section>
+      </Section>
 
-      {/* LATEST HIGH-SIGNAL NEWS */}
+      {/* ─── LATEST NEWS (lowest priority) ───────────────────────────── */}
       {news.length > 0 && (
-        <section>
-          <SectionHeader title="Latest High-Signal News" href="/news" accent="slate" />
-          <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Section kicker="News" title="High-signal updates" href="/news" accent="slate">
+          <ul className="grid gap-3 sm:grid-cols-2">
             {news.map((a) => (
-              <li key={a.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900">
+              <li key={a.id} className="card card-hover p-4">
                 {a.category?.name && (
                   <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{a.category.name}</div>
                 )}
-                <Link href={`/article/${a.slug}`}
-                  className="font-display text-sm font-bold leading-snug text-slate-900 hover:text-emerald-700 dark:text-white dark:hover:text-emerald-300">
+                <Link href={`/article/${a.slug}`} className="font-display text-[14px] font-semibold leading-snug text-white hover:text-opportunity">
                   {a.title}
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
 
-      {/* NEWSLETTER */}
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white md:p-10">
+      {/* ─── NEWSLETTER ─────────────────────────────────────────────── */}
+      <section className="card overflow-hidden p-8 md:p-12">
         <div className="max-w-xl">
-          <h2 className="font-display text-2xl font-bold">Daily intelligence in your inbox</h2>
-          <p className="mt-2 text-slate-300">
-            The day's top opportunities, signals, and tool launches — summarized and delivered. No spam.
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-opportunity">Daily Intelligence</div>
+          <h2 className="font-display text-2xl font-bold text-white md:text-3xl">In your inbox.</h2>
+          <p className="mt-2 text-slate-400">
+            Top opportunities, signals, and tool launches — summarized and delivered. No spam.
           </p>
-          <div className="mt-5">
-            <NewsletterForm />
-          </div>
+          <div className="mt-6"><NewsletterForm /></div>
         </div>
       </section>
     </div>
   );
 }
 
-function SectionHeader({
-  title,
-  href,
-  accent,
-  subtitle,
+function Section({
+  kicker, title, href, accent, children,
 }: {
-  title: string;
-  href: string;
-  accent: "emerald" | "orange" | "sky" | "violet" | "rose" | "slate";
-  subtitle?: string;
+  kicker: string; title: string; href: string;
+  accent: "signal" | "opportunity" | "tool" | "workflow" | "startup" | "slate";
+  children: React.ReactNode;
 }) {
-  const bar = {
-    emerald: "bg-emerald-500", orange: "bg-orange-500", sky: "bg-sky-500",
-    violet: "bg-violet-500", rose: "bg-rose-500", slate: "bg-slate-400",
+  const txt = {
+    signal: "text-signal", opportunity: "text-opportunity", tool: "text-tool",
+    workflow: "text-workflow", startup: "text-startup", slate: "text-slate-400",
   }[accent];
   return (
-    <div className="mb-5 flex items-end justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <span className={`h-6 w-1 rounded-full ${bar}`} />
+    <section className="mx-auto max-w-content">
+      <div className="mb-7 flex items-end justify-between gap-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+          <div className={`mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${txt}`}>{kicker}</div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-white md:text-[1.7rem]">{title}</h2>
         </div>
+        <Link href={href} className="shrink-0 text-[12px] font-semibold uppercase tracking-wider text-slate-500 hover:text-white">
+          See all →
+        </Link>
       </div>
-      <Link href={href} className="text-xs font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
-        See all →
-      </Link>
+      {children}
+    </section>
+  );
+}
+
+function SearchPrompt() {
+  // Pure-CSS prompt → triggers the palette via the same event the header uses.
+  // Client-side only by intent; renders fine SSR (no JS = harmless visual).
+  return (
+    <button
+      type="button"
+      onClick={() => typeof window !== "undefined" && window.dispatchEvent(new CustomEvent("cmdk:open"))}
+      className="mt-8 flex h-12 w-full max-w-xl items-center gap-3 rounded-xl border border-slate-800 bg-canvas-raised/80 px-4 text-left text-slate-400 backdrop-blur transition hover:border-slate-700 hover:bg-canvas-elevated"
+    >
+      <svg className="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+      <span className="flex-1 text-[14px]">Search opportunities, tools, signals, workflows…</span>
+      <kbd className="ml-auto hidden h-6 select-none items-center gap-0.5 rounded border border-slate-700 bg-canvas px-2 font-mono text-[11px] text-slate-400 sm:inline-flex">
+        ⌘K
+      </kbd>
+    </button>
+  );
+}
+
+function Mini({ label, v, invert = false }: { label: string; v: number; invert?: boolean }) {
+  const good = invert ? v < 40 : v >= 70;
+  const ok = invert ? v < 65 : v >= 50;
+  const color = good ? "text-growth" : ok ? "text-warning" : "text-slate-500";
+  return (
+    <div className="rounded bg-canvas-elevated px-1.5 py-1">
+      <div className="text-[9px] uppercase tracking-wider text-slate-500">{label}</div>
+      <div className={`text-[12px] font-semibold tabular-nums ${color}`}>{v.toFixed(0)}</div>
     </div>
   );
 }
