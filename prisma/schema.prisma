@@ -2,7 +2,7 @@
 // PostgreSQL + Prisma. Run `npm run db:push` (or db:migrate) to apply.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // "native" covers local dev + the build machine; the rhel targets cover
   // serverless runtimes (Netlify/AWS Lambda) so the deployed functions can
   // find a matching Prisma query engine.
@@ -27,9 +27,9 @@ model Category {
 }
 
 model Tag {
-  id       String        @id @default(cuid())
-  name     String        @unique
-  slug     String        @unique
+  id       String       @id @default(cuid())
+  name     String       @unique
+  slug     String       @unique
   articles ArticleTag[]
 }
 
@@ -47,43 +47,43 @@ enum SourceType {
 }
 
 model Source {
-  id           String       @id @default(cuid())
-  type         SourceType
-  name         String
-  url          String?      // feed url / subreddit / query
-  category     String       @default("general")
-  enabled      Boolean      @default(true)
-  weight       Float        @default(1.0) // trust/importance multiplier
-  lastFetched  DateTime?
-  lastStatus   String?      // ok | error:<msg>
-  signals      TrendSignal[]
-  createdAt    DateTime     @default(now())
+  id          String        @id @default(cuid())
+  type        SourceType
+  name        String
+  url         String? // feed url / subreddit / query
+  category    String        @default("general")
+  enabled     Boolean       @default(true)
+  weight      Float         @default(1.0) // trust/importance multiplier
+  lastFetched DateTime?
+  lastStatus  String? // ok | error:<msg>
+  signals     TrendSignal[]
+  createdAt   DateTime      @default(now())
 
   @@unique([type, url])
 }
 
 // A raw observation pulled from a source (one headline / post / query).
 model TrendSignal {
-  id          String     @id @default(cuid())
-  source      Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  sourceId    String
-  title       String
-  url         String?
-  summary     String?    @db.Text
-  score       Float      @default(0) // raw popularity from the source (upvotes, rank...)
-  raw         Json?
-  topic       TrendTopic? @relation(fields: [topicId], references: [id])
-  topicId     String?
-  observedAt  DateTime   @default(now())
+  id         String      @id @default(cuid())
+  source     Source      @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId   String
+  title      String
+  url        String?
+  summary    String?     @db.Text
+  score      Float       @default(0) // raw popularity from the source (upvotes, rank...)
+  raw        Json?
+  topic      TrendTopic? @relation(fields: [topicId], references: [id])
+  topicId    String?
+  observedAt DateTime    @default(now())
 
   @@index([observedAt])
   @@index([sourceId])
 }
 
 enum TopicStatus {
-  DETECTED   // freshly clustered
-  RANKED     // scored & ranked
-  SELECTED   // chosen for generation
+  DETECTED // freshly clustered
+  RANKED // scored & ranked
+  SELECTED // chosen for generation
   GENERATING
   GENERATED
   REJECTED
@@ -92,29 +92,29 @@ enum TopicStatus {
 
 // A clustered, dedup'd topic aggregated from many signals.
 model TrendTopic {
-  id              String        @id @default(cuid())
-  title           String
-  slug            String        @unique
-  category        String        @default("general")
-  keywords        String[]
-  status          TopicStatus   @default(DETECTED)
+  id       String      @id @default(cuid())
+  title    String
+  slug     String      @unique
+  category String      @default("general")
+  keywords String[]
+  status   TopicStatus @default(DETECTED)
 
   // Scoring (0-100 each)
-  viralScore      Float         @default(0)
-  seoScore        Float         @default(0)
-  freshnessScore  Float         @default(0)
-  competitionScore Float        @default(0) // higher = LOWER competition (more opportunity)
-  finalScore      Float         @default(0)
+  viralScore       Float @default(0)
+  seoScore         Float @default(0)
+  freshnessScore   Float @default(0)
+  competitionScore Float @default(0) // higher = LOWER competition (more opportunity)
+  finalScore       Float @default(0)
 
-  sourceCount     Int           @default(1)
-  isBreaking      Boolean       @default(false)
+  sourceCount Int     @default(1)
+  isBreaking  Boolean @default(false)
 
-  signals         TrendSignal[]
-  articles        Article[]
-  memes           Meme[]
+  signals  TrendSignal[]
+  articles Article[]
+  memes    Meme[]
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([finalScore])
   @@index([status])
@@ -129,58 +129,58 @@ enum ArticleType {
 
 enum ArticleStatus {
   DRAFT
-  REVIEW       // waiting for manual approval
+  REVIEW // waiting for manual approval
   SCHEDULED
   PUBLISHED
   REJECTED
 }
 
 model Article {
-  id            String        @id @default(cuid())
-  type          ArticleType   @default(NEWS)
-  status        ArticleStatus @default(DRAFT)
+  id     String        @id @default(cuid())
+  type   ArticleType   @default(NEWS)
+  status ArticleStatus @default(DRAFT)
 
-  title         String
-  slug          String        @unique
-  dek           String?       @db.Text // standfirst / subtitle
-  body          String        @db.Text // markdown
-  excerpt       String?       @db.Text
+  title   String
+  slug    String  @unique
+  dek     String? @db.Text // standfirst / subtitle
+  body    String  @db.Text // markdown
+  excerpt String? @db.Text
 
   // SEO
-  seoTitle      String?
-  seoDescription String?      @db.Text
-  keywords      String[]
-  canonicalUrl  String?
-  faq           Json?         // [{question, answer}]
-  sources       Json?         // [{title, url}] external citations
-  ogImage       String?
-  imageCredit   String?       // attribution for CC/Wikimedia images (legally required)
-  factCheck     Json?         // {claimReviewed, rating, verdict} for fact-check pieces
+  seoTitle       String?
+  seoDescription String?  @db.Text
+  keywords       String[]
+  canonicalUrl   String?
+  faq            Json? // [{question, answer}]
+  sources        Json? // [{title, url}] external citations
+  ogImage        String?
+  imageCredit    String? // attribution for CC/Wikimedia images (legally required)
+  factCheck      Json? // {claimReviewed, rating, verdict} for fact-check pieces
 
   // Quality
-  qualityScore  Float         @default(0)
+  qualityScore  Float @default(0)
   qualityReport Json?
-  wordCount     Int           @default(0)
-  readingMin    Int           @default(0)
+  wordCount     Int   @default(0)
+  readingMin    Int   @default(0)
 
   // Relations
-  category      Category?     @relation(fields: [categoryId], references: [id])
-  categoryId    String?
-  topic         TrendTopic?   @relation(fields: [topicId], references: [id])
-  topicId       String?
-  tags          ArticleTag[]
-  clusterId     String?       // topic-cluster id linking pillar + supporting posts
-  isPillar      Boolean       @default(false)
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  topic      TrendTopic?  @relation(fields: [topicId], references: [id])
+  topicId    String?
+  tags       ArticleTag[]
+  clusterId  String? // topic-cluster id linking pillar + supporting posts
+  isPillar   Boolean      @default(false)
 
   // Internal linking (self-referential many-to-many)
-  linksOut      ArticleLink[] @relation("from")
-  linksIn       ArticleLink[] @relation("to")
+  linksOut ArticleLink[] @relation("from")
+  linksIn  ArticleLink[] @relation("to")
 
-  publishedAt   DateTime?
-  scheduledFor  DateTime?
-  views         Int           @default(0)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  publishedAt  DateTime?
+  scheduledFor DateTime?
+  views        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([status, type])
   @@index([publishedAt])
@@ -197,13 +197,78 @@ model ArticleTag {
 }
 
 model ArticleLink {
-  from     Article @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
-  fromId   String
-  to       Article @relation("to", fields: [toId], references: [id], onDelete: Cascade)
-  toId     String
-  anchor   String
+  from   Article @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  fromId String
+  to     Article @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+  toId   String
+  anchor String
 
   @@id([fromId, toId])
+}
+
+// ── Opportunities (Pillar 1 — the moat) ──────────────────────────────────────
+// An AI Opportunity is an actionable thing a user can build, sell, or monetize.
+// It is NOT a news article. News supports opportunities; opportunities are the
+// product. Score is computed from demand/growth/competition/monetization so we
+// can rank them on the homepage and in the /opportunities feed.
+
+enum OpportunityKind {
+  BUSINESS // standalone business idea
+  STARTUP // venture-scale opportunity
+  AUTOMATION // workflow/automation play
+  CREATOR // content/creator angle
+  AGENCY // service business
+  NICHE // small but profitable niche
+  MONETIZATION // way to monetize existing audience/skill
+}
+
+enum OpportunityStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Opportunity {
+  id     String            @id @default(cuid())
+  slug   String            @unique
+  title  String
+  kind   OpportunityKind   @default(BUSINESS)
+  status OpportunityStatus @default(DRAFT)
+
+  // Editorial fields
+  summary           String   @db.Text // one-paragraph TL;DR
+  whyItMatters      String   @db.Text // why now, why this
+  marketContext     String?  @db.Text // demand signals, search trends
+  implementation    String?  @db.Text // how to actually start
+  monetizationPaths Json? // [{path, model, revenueRange}]
+  recommendedTools  Json? // [{name, url, why}]
+  relatedWorkflows  Json? // [{title, url}]
+  relatedArticleIds String[] // links to NEWS articles that surfaced this
+
+  // Scoring inputs (0-100 each)
+  demandScore       Float @default(50)
+  growthScore       Float @default(50)
+  competitionScore  Float @default(50) // higher = MORE competition (worse)
+  monetizationScore Float @default(50)
+  difficultyScore   Float @default(50) // higher = HARDER to execute
+
+  // Computed (denormalized for fast sort): see lib/opportunity-score.ts
+  opportunityScore Float @default(0)
+
+  // SEO
+  seoTitle       String?
+  seoDescription String?  @db.Text
+  keywords       String[]
+  ogImage        String?
+
+  views       Int       @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, opportunityScore])
+  @@index([publishedAt])
+  @@index([kind])
 }
 
 // ── Memes ────────────────────────────────────────────────────────────────────
@@ -220,12 +285,12 @@ model Meme {
   status       MemeStatus  @default(DRAFT)
   title        String
   slug         String      @unique
-  format       String      // e.g. "Drake", "Distracted Boyfriend", "two-panel"
+  format       String // e.g. "Drake", "Distracted Boyfriend", "two-panel"
   topText      String?
   bottomText   String?
   caption      String?     @db.Text // social-share caption
   imagePrompt  String      @db.Text // AI image generation prompt
-  imageUrl     String?     // populated once an image is rendered
+  imageUrl     String? // populated once an image is rendered
   category     Category?   @relation(fields: [categoryId], references: [id])
   categoryId   String?
   topic        TrendTopic? @relation(fields: [topicId], references: [id])
@@ -241,22 +306,22 @@ model Meme {
 // ── Monetization (architecture-ready) ────────────────────────────────────────
 
 model NewsletterSubscriber {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  confirmed    Boolean  @default(false)
-  unsubToken   String   @unique @default(cuid())
-  topics       String[] // interest tags
-  createdAt    DateTime @default(now())
+  id         String   @id @default(cuid())
+  email      String   @unique
+  confirmed  Boolean  @default(false)
+  unsubToken String   @unique @default(cuid())
+  topics     String[] // interest tags
+  createdAt  DateTime @default(now())
 }
 
 model AffiliateLink {
-  id        String  @id @default(cuid())
-  name      String
-  url       String
-  network   String  // amazon | impact | shareasale | custom
-  keywords  String[] // auto-insert when these keywords appear in content
-  clicks    Int     @default(0)
-  enabled   Boolean @default(true)
+  id       String   @id @default(cuid())
+  name     String
+  url      String
+  network  String // amazon | impact | shareasale | custom
+  keywords String[] // auto-insert when these keywords appear in content
+  clicks   Int      @default(0)
+  enabled  Boolean  @default(true)
 }
 
 model SponsoredPost {
@@ -285,8 +350,8 @@ model DailyStat {
 
 model JobLog {
   id        String   @id @default(cuid())
-  job       String   // queue/job name
-  status    String   // started | ok | error
+  job       String // queue/job name
+  status    String // started | ok | error
   message   String?  @db.Text
   meta      Json?
   createdAt DateTime @default(now())

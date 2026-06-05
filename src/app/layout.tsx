@@ -29,6 +29,10 @@ export const metadata: Metadata = {
 
 const nav = [
   { href: "/", label: "Home" },
+  // Opportunities is the platform's new flagship surface (Pillar 1). It sits
+  // above Blog so visitors immediately see actionable intelligence, not just
+  // news — without removing anything that already worked.
+  { href: "/opportunities", label: "Opportunities" },
   { href: "/blog", label: "Blog" },
 ];
 

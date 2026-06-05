@@ -9,7 +9,7 @@ export const revalidate = 600;
 
 // Dynamic XML sitemap — Next.js serves this at /sitemap.xml automatically.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [articles, categories] = await Promise.all([
+  const [articles, categories, opportunities] = await Promise.all([
     safe(
       prisma.article.findMany({
         where: { status: "PUBLISHED" },
@@ -28,10 +28,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
       [] as { slug: string }[],
     ),
+    // Pillar 1 — Opportunities. High priority because these are the platform's
+    // flagship pages (ranked by opportunityScore; Google likes scored content).
+    safe(
+      prisma.opportunity.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true, updatedAt: true },
+        orderBy: { opportunityScore: "desc" },
+        take: 2000,
+      }),
+      [] as { slug: string; updatedAt: Date }[],
+    ),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: env.SITE_URL, changeFrequency: "hourly", priority: 1 },
+    { url: `${env.SITE_URL}/opportunities`, changeFrequency: "daily", priority: 0.9 },
     { url: `${env.SITE_URL}/blog`, changeFrequency: "daily", priority: 0.8 },
     { url: `${env.SITE_URL}/about`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${env.SITE_URL}/editorial-policy`, changeFrequency: "monthly", priority: 0.3 },
@@ -53,5 +65,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: a.type === "BLOG" ? 0.6 : 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...dynamic];
+  const opportunityPages: MetadataRoute.Sitemap = opportunities.map((o) => ({
+    url: `${env.SITE_URL}/opportunities/${o.slug}`,
+    lastModified: o.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.85,
+  }));
+
+  return [...staticPages, ...categoryPages, ...opportunityPages, ...dynamic];
 }
