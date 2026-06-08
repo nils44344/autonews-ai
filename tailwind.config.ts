@@ -60,11 +60,11 @@ const config: Config = {
         warning:     { DEFAULT: "#fbbf24", soft: "#92400e" },
       },
       fontFamily: {
+        // Reverted: serif italic was too hard to read. Everything readable
+        // now uses Geist Sans; only the data ledgers use Geist Mono.
         sans:    ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        // Display now uses Instrument Serif — editorial, distinctive, signals
-        // "this is not another generic Geist dashboard".
-        display: ["var(--font-serif)", "Georgia", "Times New Roman", "serif"],
-        serif:   ["var(--font-serif)", "Georgia", "Times New Roman", "serif"],
+        display: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif:   ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         mono:    ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       maxWidth: {
