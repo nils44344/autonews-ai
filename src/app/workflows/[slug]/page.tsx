@@ -21,7 +21,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description: w.seoDescription ?? w.objective.slice(0, 160),
     alternates: { canonical: `${env.SITE_URL}/workflows/${slug}` },
-    openGraph: { type: "article", images: w.ogImage ? [w.ogImage] : undefined },
+    openGraph: {
+      type: "article",
+      images: w.ogImage ? [w.ogImage] : [`${env.SITE_URL}/opengraph-image`],
+    },
   };
 }
 

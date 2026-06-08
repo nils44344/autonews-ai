@@ -44,7 +44,12 @@ export async function generateMetadata({
     title,
     description: o.seoDescription ?? o.summary.slice(0, 160),
     alternates: { canonical: `${env.SITE_URL}/opportunities/${slug}` },
-    openGraph: { type: "article", images: o.ogImage ? [o.ogImage] : undefined },
+    openGraph: {
+      type: "article",
+      // Always include a branded fallback so the page never ships without an
+      // og:image (audit flagged the row-level ogImage was null for seeds).
+      images: o.ogImage ? [o.ogImage] : [`${env.SITE_URL}/opengraph-image`],
+    },
   };
 }
 

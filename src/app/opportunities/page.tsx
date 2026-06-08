@@ -17,7 +17,8 @@ export const metadata: Metadata = {
   description:
     "Curated AI opportunities ranked by demand, growth, competition, and monetization. Find your next business, automation, or creator play.",
   alternates: { canonical: "/opportunities" },
-  openGraph: { type: "website" },
+  // No openGraph override → inherits the default + branded og:image from
+  // app/layout.tsx (Next merges parent metadata when child doesn't set it).
 };
 
 const KIND: Record<string, string> = {
