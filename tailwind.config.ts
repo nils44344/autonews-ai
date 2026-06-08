@@ -1,8 +1,10 @@
 import type { Config } from "tailwindcss";
 
-// New design system — "AI Intelligence Operating System". Dark-first, premium,
-// Bloomberg + Linear + Stripe + Perplexity in spirit. Color tokens map to the
-// six pillars; spacing scale bumped so layouts breathe.
+// NEW signature for AutoNews AI — distinctive on purpose. No more purple-blue
+// rainbow (every generic dark dashboard does that). Single brand channel:
+// electric teal as primary, warm amber-gold as accent. Pillars get distinct
+// hues but they're all anchored to the teal/amber axis so the brand reads as
+// one product, not six unrelated sections.
 
 const config: Config = {
   content: [
@@ -14,28 +16,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Surfaces (dark-first)
+        // ── Surfaces ─────────────────────────────────────────────
         canvas: {
-          DEFAULT: "#0a0d14",      // deep intelligence black
-          raised: "#0f1320",       // subtle panel
-          elevated: "#151a2b",     // hover/active panel
+          DEFAULT: "#06080d",      // deeper than before — near-black graphite
+          raised: "#0c1018",
+          elevated: "#141925",
+          rule:    "#1d2433",      // subtle divider
         },
-        ink: { DEFAULT: "#0b0a14" }, // legacy
-        // Pillar accents — explicit semantic names so usage is intentional.
-        signal:      { DEFAULT: "#3b82f6", soft: "#1e3a8a" }, // blue   (Signals)
-        opportunity: { DEFAULT: "#a855f7", soft: "#581c87" }, // purple (Opportunities)
-        tool:        { DEFAULT: "#06b6d4", soft: "#155e75" }, // cyan   (Tools)
-        workflow:    { DEFAULT: "#6366f1", soft: "#312e81" }, // indigo (Workflows)
-        startup:     { DEFAULT: "#f59e0b", soft: "#78350f" }, // amber  (Startups)
-        growth:      { DEFAULT: "#10b981", soft: "#064e3b" }, // green  (Growth/up)
-        warning:     { DEFAULT: "#f59e0b", soft: "#78350f" }, // amber
-        brand:  { DEFAULT: "#a855f7", dark: "#7e22ce", light: "#c084fc" },
-        accent: "#3b82f6",
+        ink: { DEFAULT: "#06080d" },
+
+        // ── Brand: electric teal (primary) + amber gold (accent) ──
+        brand: {
+          DEFAULT: "#22d3b8",      // electric teal
+          dark:    "#0d9488",
+          light:   "#5eead4",
+        },
+        accent: {
+          DEFAULT: "#fbbf24",      // amber-gold
+          dark:    "#d97706",
+          light:   "#fde68a",
+        },
+
+        // ── Pillars (semantic, anchored to teal/amber axis) ──────
+        // Opportunities — the moat, gets the brand teal.
+        opportunity: { DEFAULT: "#22d3b8", soft: "#0d9488" },
+        // Signals — high-energy amber.
+        signal:      { DEFAULT: "#fbbf24", soft: "#92400e" },
+        // Tools — cool blue-teal, related to brand.
+        tool:        { DEFAULT: "#38bdf8", soft: "#075985" },
+        // Workflows — muted violet (complement to teal).
+        workflow:    { DEFAULT: "#a78bfa", soft: "#5b21b6" },
+        // Startups — orange-red, signals breakouts.
+        startup:     { DEFAULT: "#fb7185", soft: "#9f1239" },
+        // Growth + warning kept consistent.
+        growth:      { DEFAULT: "#34d399", soft: "#065f46" },
+        warning:     { DEFAULT: "#fbbf24", soft: "#92400e" },
       },
       fontFamily: {
-        // Geist (Vercel/Linear/Stripe standard) via the `geist` package, which
-        // exposes --font-geist-sans / --font-geist-mono. We point sans + display
-        // + serif at the same family so every existing usage upgrades at once.
         sans:    ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         serif:   ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
@@ -43,7 +60,10 @@ const config: Config = {
       },
       maxWidth: {
         prose:   "72ch",
-        content: "1180px",
+        content: "1240px",   // slightly wider than before — more breathing room
+      },
+      letterSpacing: {
+        bracket: "0.22em",   // for [01] OPPORTUNITIES style section marks
       },
       keyframes: {
         marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
@@ -55,15 +75,23 @@ const config: Config = {
           "0%":   { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        // Slow horizontal drift for ticker bars.
+        ticker: {
+          from: { transform: "translateX(0)" },
+          to:   { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         marquee:   "marquee 40s linear infinite",
         "fade-up": "fade-up 240ms ease-out both",
         shimmer:   "shimmer 1.6s linear infinite",
+        ticker:    "ticker 70s linear infinite",
       },
       boxShadow: {
-        card:         "0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.4)",
-        "card-hover": "0 1px 0 rgba(255,255,255,0.06) inset, 0 6px 16px -2px rgba(0,0,0,0.45)",
+        card:         "0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.55)",
+        "card-hover": "0 1px 0 rgba(34, 211, 184, 0.12) inset, 0 8px 20px -4px rgba(0,0,0,0.6)",
+        // Subtle glow for the brand teal accent on hover targets.
+        glow:         "0 0 30px -8px rgba(34, 211, 184, 0.4)",
       },
       typography: {
         DEFAULT: { css: { maxWidth: "72ch" } },

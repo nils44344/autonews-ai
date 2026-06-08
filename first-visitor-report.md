@@ -1,18 +1,10 @@
 # First-Visitor Audit Report
-Generated: 2026-06-08T10:43:16.491Z
+Generated: 2026-06-08T10:47:11.257Z
 
-**Defects:** 0 HIGH · 1 MEDIUM · 5 LOW
+**Defects:** 0 HIGH · 2 MEDIUM · 0 LOW
 
-## MEDIUM (1)
+## MEDIUM (2)
 | URL | Category | Detail |
 |---|---|---|
-| /opportunities/ai-newsletter-for-indian-smbs | Performance | Slow response: 2291ms |
-
-## LOW (5)
-| URL | Category | Detail |
-|---|---|---|
-| /opportunities | Social | No og:image |
-| /opportunities/ai-newsletter-for-indian-smbs | Social | No og:image |
-| /tools/claude | Social | No og:image |
-| /workflows/daily-faceless-youtube-pipeline | Social | No og:image |
-| /startups/anthropic | Social | No og:image |
+| /opportunities/ai-newsletter-for-indian-smbs | Performance | Slow response: 2045ms |
+| /category/ai | Performance | Slow response: 1572ms |
