@@ -16,16 +16,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Surfaces (theme-aware via CSS vars defined in globals.css) ──
-        // This makes `bg-canvas`, `bg-canvas-raised` etc. flip with the theme
-        // toggle instead of being hardcoded to the dark hex values.
+        // ── Surfaces (theme-aware via "R G B" CSS-var triplets) ──
+        // The rgb(var(...) / <alpha-value>) format lets Tailwind apply alpha
+        // modifiers like bg-canvas/85 directly. Switching to raw "R G B"
+        // triplets in globals.css fixes the bug where the sticky header
+        // appeared light while the rest of the page was dark.
         canvas: {
-          DEFAULT:   "var(--canvas)",
-          raised:    "var(--canvas-raised)",
-          elevated:  "var(--canvas-elevated)",
-          rule:      "var(--canvas-rule)",
+          DEFAULT:   "rgb(var(--canvas) / <alpha-value>)",
+          raised:    "rgb(var(--canvas-raised) / <alpha-value>)",
+          elevated:  "rgb(var(--canvas-elevated) / <alpha-value>)",
+          rule:      "rgb(var(--canvas-rule) / <alpha-value>)",
         },
-        ink: { DEFAULT: "var(--fg)" },
+        ink: { DEFAULT: "rgb(var(--fg) / <alpha-value>)" },
 
         // ── Brand: electric teal (primary) + amber gold (accent) ──
         brand: {
