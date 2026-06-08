@@ -58,8 +58,10 @@ const config: Config = {
       },
       fontFamily: {
         sans:    ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        serif:   ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Display now uses Instrument Serif — editorial, distinctive, signals
+        // "this is not another generic Geist dashboard".
+        display: ["var(--font-serif)", "Georgia", "Times New Roman", "serif"],
+        serif:   ["var(--font-serif)", "Georgia", "Times New Roman", "serif"],
         mono:    ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       maxWidth: {

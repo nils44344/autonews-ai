@@ -2,7 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Instrument_Serif } from "next/font/google";
 import { env } from "@/lib/env";
+
+// Display serif — Instrument Serif. Distinctive editorial face used by Linear,
+// Vercel design teams. Paired with Geist sans/mono gives the platform a
+// magazine-meets-terminal feel no AI dashboard ships with.
+const displaySerif = Instrument_Serif({
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+  style: ["normal", "italic"],
+});
 import { organizationJsonLd, ldScript } from "@/lib/seo/schema";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -53,7 +65,7 @@ const nav = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} dark`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${displaySerif.variable} dark`}>
       <head>
         <script async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}

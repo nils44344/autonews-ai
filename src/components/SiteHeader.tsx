@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RoleBadge } from "./Personalization";
+import { BrandMark } from "./BrandMark";
 
 interface NavItem { href: string; label: string }
 
@@ -36,13 +37,13 @@ export function SiteHeader({ siteName, nav }: { siteName: string; nav: NavItem[]
     <header className="sticky top-0 z-30 border-b border-canvas-rule bg-canvas/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-content items-center gap-3 px-5 sm:gap-5 sm:px-6">
         {/* Logo — wordmark with a bracketed sigil for distinction */}
-        <Link href="/" onClick={() => setOpen(false)} className="flex shrink-0 items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt={siteName} className="h-7 w-7" />
-          <span className="hidden whitespace-nowrap font-display text-[15px] font-bold tracking-tight text-[color:var(--fg)] sm:inline">
-            {siteName}
+        <Link href="/" onClick={() => setOpen(false)} className="flex shrink-0 items-center gap-2.5">
+          {/* Custom inline-SVG sigil — replaces the generic logo PNG. */}
+          <BrandMark size={26} />
+          <span className="hidden whitespace-nowrap font-display text-[18px] italic leading-none tracking-tight text-[color:rgb(var(--fg))] sm:inline">
+            AutoNews
           </span>
-          <span className="hidden font-mono text-[10px] font-bold uppercase tracking-bracket text-[color:var(--muted-fg)] sm:inline">
+          <span className="hidden font-mono text-[10px] font-bold uppercase tracking-bracket text-brand sm:inline">
             // INTEL
           </span>
         </Link>

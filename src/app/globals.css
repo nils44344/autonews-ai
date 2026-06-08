@@ -21,13 +21,15 @@
   --muted-fg:          71  85 105;  /* #475569 */
 }
 html.dark {
-  --bg:                 6   8  13;  /* #06080d */
-  --fg:               230 234 242;  /* #e6eaf2 */
-  --canvas:             6   8  13;  /* #06080d */
-  --canvas-raised:     12  16  24;  /* #0c1018 */
-  --canvas-elevated:   20  25  37;  /* #141925 */
-  --canvas-rule:       29  36  51;  /* #1d2433 */
-  --muted-fg:         148 163 184;  /* #94a3b8 */
+  /* Pure black canvas — distinctive vs the navy/slate dark every SaaS uses.
+   * Raised surfaces are barely-there warm graphite, not corporate dark blue. */
+  --bg:                 0   0   0;  /* pure black */
+  --fg:               245 245 240;  /* warm off-white */
+  --canvas:             0   0   0;
+  --canvas-raised:     10  10  12;  /* warm graphite */
+  --canvas-elevated:   18  18  22;
+  --canvas-rule:       30  30  34;
+  --muted-fg:         156 156 148;  /* warm muted */
 }
 
 html {
@@ -40,7 +42,23 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "cv01", "cv11";
+  position: relative;
 }
+
+/* Film grain overlay — pure CSS, ~1KB inline SVG noise. Subtle but immediately
+ * separates the platform from the army of flat-dark dashboards. */
+html.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+/* Ensure interactive content stays above the grain layer */
+body > * { position: relative; z-index: 2; }
 
 /* ── Theme-aware overrides ─────────────────────────────────────────────
  * The site was designed dark-first with hardcoded text-white / text-slate-*
