@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-// localStorage-backed Save / Watchlist (v1). No auth required so the friction
-// to "save" is near zero — bumps engagement immediately. v2 will sync to a
-// backend keyed on a session cookie.
+// localStorage-backed Save / Watchlist (v1). Bracketed [+]/[★] mono sigil
+// instead of the standard bookmark SVG — distinctive vs every other site.
 
 type Kind = "opportunity" | "tool" | "workflow" | "startup" | "signal";
 
@@ -56,7 +55,7 @@ export function SaveButton({ kind, slug, title, href, size = "md" }: {
     }
   }
 
-  const s = size === "sm" ? "h-7 w-7" : "h-9 w-9";
+  const dim = size === "sm" ? "h-7 px-1.5 text-[9px]" : "h-9 px-2.5 text-[11px]";
   return (
     <button
       type="button"
@@ -65,17 +64,14 @@ export function SaveButton({ kind, slug, title, href, size = "md" }: {
       aria-label={saved ? "Remove from watchlist" : "Save to watchlist"}
       title={saved ? "Saved · click to remove" : "Save to watchlist"}
       className={[
-        "grid shrink-0 place-items-center rounded-lg border transition",
-        s,
+        "inline-flex items-center gap-1 rounded-md border font-mono font-bold uppercase tracking-bracket transition",
+        dim,
         saved
-          ? "border-opportunity/50 bg-opportunity/10 text-opportunity"
-          : "border-slate-800 bg-canvas-raised text-slate-500 hover:border-slate-700 hover:text-slate-300",
+          ? "border-brand/50 bg-brand/10 text-brand"
+          : "border-canvas-rule bg-canvas-raised text-[color:var(--muted-fg)] hover:border-brand/40 hover:text-brand",
       ].join(" ")}
     >
-      <svg viewBox="0 0 24 24" className="h-[14px] w-[14px]"
-        fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-      </svg>
+      {saved ? "[★] SAVED" : "[+] SAVE"}
     </button>
   );
 }

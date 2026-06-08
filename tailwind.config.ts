@@ -16,14 +16,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Surfaces ─────────────────────────────────────────────
+        // ── Surfaces (theme-aware via CSS vars defined in globals.css) ──
+        // This makes `bg-canvas`, `bg-canvas-raised` etc. flip with the theme
+        // toggle instead of being hardcoded to the dark hex values.
         canvas: {
-          DEFAULT: "#06080d",      // deeper than before — near-black graphite
-          raised: "#0c1018",
-          elevated: "#141925",
-          rule:    "#1d2433",      // subtle divider
+          DEFAULT:   "var(--canvas)",
+          raised:    "var(--canvas-raised)",
+          elevated:  "var(--canvas-elevated)",
+          rule:      "var(--canvas-rule)",
         },
-        ink: { DEFAULT: "#06080d" },
+        ink: { DEFAULT: "var(--fg)" },
 
         // ── Brand: electric teal (primary) + amber gold (accent) ──
         brand: {

@@ -3,31 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Mobile bottom navigation per the design brief: "Mobile is not secondary.
-// Mobile is primary." 5 thumb-friendly targets. Hidden on md+ where the
-// header nav takes over. Active pill uses the pillar accent.
+// Mobile bottom nav — uses bracketed 3-letter mono sigils [OPP] [SIG] [TOL]
+// [FLW] [STR] instead of generic Lucide/Material icons. Distinctive on
+// purpose; matches the header's terminal aesthetic. Each sigil is colored
+// in its pillar accent.
 
-const items: { href: string; label: string; accent: string; icon: React.ReactNode }[] = [
-  {
-    href: "/opportunities", label: "Opps", accent: "text-opportunity",
-    icon: <path d="M12 2 4 7v6c0 4.5 3.5 8.5 8 9 4.5-.5 8-4.5 8-9V7l-8-5Z" />,
-  },
-  {
-    href: "/signals", label: "Signals", accent: "text-signal",
-    icon: <path d="M3 17c3-4 6-4 9 0 3 4 6 4 9 0" />,
-  },
-  {
-    href: "/tools", label: "Tools", accent: "text-tool",
-    icon: <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-7 7 2 2 7-7a4 4 0 0 0 5.4-5.4l-2 2-2-2 2-2Z" />,
-  },
-  {
-    href: "/workflows", label: "Flows", accent: "text-workflow",
-    icon: <path d="M4 6h6m4 0h6M4 12h6m4 0h6M4 18h6m4 0h6" />,
-  },
-  {
-    href: "/startups", label: "Radar", accent: "text-startup",
-    icon: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /></>,
-  },
+const items: { href: string; sigil: string; label: string; accent: string }[] = [
+  { href: "/opportunities", sigil: "OPP", label: "Opps",   accent: "text-opportunity" },
+  { href: "/signals",       sigil: "SIG", label: "Signals", accent: "text-signal" },
+  { href: "/tools",         sigil: "TOL", label: "Tools",  accent: "text-tool" },
+  { href: "/workflows",     sigil: "FLW", label: "Flows",  accent: "text-workflow" },
+  { href: "/startups",      sigil: "STR", label: "Radar",  accent: "text-startup" },
 ];
 
 export function BottomNav() {
@@ -36,7 +22,7 @@ export function BottomNav() {
     <nav
       role="navigation"
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-900 bg-canvas/95 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-canvas-rule bg-canvas/95 backdrop-blur md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <ul className="mx-auto grid max-w-content grid-cols-5">
@@ -47,15 +33,19 @@ export function BottomNav() {
               <Link
                 href={it.href}
                 className={[
-                  "flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider transition",
-                  active ? it.accent : "text-slate-500 hover:text-slate-300",
+                  "relative flex h-14 flex-col items-center justify-center gap-1 transition",
+                  active
+                    ? `${it.accent}`
+                    : "text-[color:var(--muted-fg)] hover:text-[color:var(--fg)]",
                 ].join(" ")}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                  strokeLinecap="round" strokeLinejoin="round" className="h-[22px] w-[22px]">
-                  {it.icon}
-                </svg>
-                {it.label}
+                <span className="font-mono text-[12px] font-extrabold tracking-wider">
+                  [{it.sigil}]
+                </span>
+                <span className="font-mono text-[9px] font-medium uppercase tracking-wider">
+                  {it.label}
+                </span>
+                {active && <span className="absolute top-0 left-1/2 h-[2px] w-8 -translate-x-1/2 rounded-full bg-current" />}
               </Link>
             </li>
           );
