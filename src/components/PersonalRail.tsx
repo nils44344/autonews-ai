@@ -33,8 +33,10 @@ export function PersonalRail({ opportunities }: { opportunities: OppLite[] }) {
   if (!role) return null;
 
   const meta = ROLE_MAP[role];
-  const ranked = rankByRole(opportunities, role).slice(0, 3);
-  const relevant = ranked.filter((o) => meta.opportunityKinds.includes(o.kind));
+  // rankByRole already floats role-matching kinds to the top. Just take 3 —
+  // don't filter (previous code dropped to 0 when seeds didn't perfectly
+  // match the role's kinds, making the rail look broken).
+  const relevant = rankByRole(opportunities, role).slice(0, 3);
 
   return (
     <section className="mx-auto -mt-6 max-w-content">
@@ -77,11 +79,6 @@ export function PersonalRail({ opportunities }: { opportunities: OppLite[] }) {
               </Link>
             ))}
           </div>
-        )}
-        {relevant.length === 0 && (
-          <p className="mt-4 text-[12px] text-[color:rgb(var(--muted-fg))]">
-            No role-matched opportunities yet. The intelligence engine surfaces more every cycle.
-          </p>
         )}
       </div>
     </section>
