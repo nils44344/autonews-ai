@@ -88,7 +88,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Wider padding utilisation on big screens; mobile keeps tight 4-side
             padding and leaves 80px bottom space so the fixed bottom nav doesn't
             cover the last row. */}
-        <main className="mx-auto w-full max-w-content flex-1 px-4 pb-24 pt-8 sm:px-6 md:px-8 md:pb-14 md:pt-14 xl:px-12">
+        {/* Fluid horizontal padding: scales 16px (mobile) -> 64px (desktop)
+            without snapping at breakpoints. Bottom 96px on mobile so the
+            fixed bottom nav never overlaps the last row. */}
+        <main className="mx-auto w-full max-w-content flex-1" style={{
+          paddingInline: "clamp(1rem, 0.4rem + 2.4vw, 4rem)",
+          paddingTop:    "clamp(1.5rem, 0.8rem + 1.8vw, 3.5rem)",
+          paddingBottom: "clamp(6rem, 4rem + 1vw, 3.5rem)",
+        }}>
           {children}
         </main>
 
