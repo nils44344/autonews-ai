@@ -85,7 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CommandPalette />
         <PersonalizationOnboarding />
 
-        <main className="mx-auto w-full max-w-content flex-1 px-5 pb-24 pt-10 sm:px-6 md:pb-14 md:pt-14">
+        {/* Wider padding utilisation on big screens; mobile keeps tight 4-side
+            padding and leaves 80px bottom space so the fixed bottom nav doesn't
+            cover the last row. */}
+        <main className="mx-auto w-full max-w-content flex-1 px-4 pb-24 pt-8 sm:px-6 md:px-8 md:pb-14 md:pt-14 xl:px-12">
           {children}
         </main>
 

@@ -69,7 +69,8 @@ const config: Config = {
       },
       maxWidth: {
         prose:   "72ch",
-        content: "1240px",   // slightly wider than before — more breathing room
+        // Wider canvas — was 1240, too narrow on modern monitors
+        content: "1480px",
       },
       letterSpacing: {
         bracket: "0.22em",   // for [01] OPPORTUNITIES style section marks
