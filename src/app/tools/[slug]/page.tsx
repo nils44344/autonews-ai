@@ -14,8 +14,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     select: { name: true, tagline: true, seoTitle: true, seoDescription: true, status: true, ogImage: true },
   });
   if (!t || t.status !== "PUBLISHED") return { title: "Tool not found" };
+  // Just the tool name — the tagline made titles too long for SERPs.
   return {
-    title: t.seoTitle ?? `${t.name} — ${t.tagline}`,
+    title: t.name,
     description: t.seoDescription ?? t.tagline,
     alternates: { canonical: `${env.SITE_URL}/tools/${slug}` },
     openGraph: { type: "article", images: t.ogImage ? [t.ogImage] : undefined },

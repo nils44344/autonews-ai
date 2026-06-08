@@ -21,8 +21,22 @@ export const metadata: Metadata = {
   },
   description:
     "Discover AI opportunities before everyone else. Track AI trends, tools, workflows, startups, and market signals in one place.",
-  openGraph: { type: "website", siteName: env.SITE_NAME, url: env.SITE_URL },
-  twitter: { card: "summary_large_image" },
+  // Default OG image: the Next.js opengraph-image route auto-resolves at
+  // /opengraph-image so social shares always get a branded card even on pages
+  // that don't override it (the audit flagged 6 pages missing og:image).
+  openGraph: {
+    type: "website",
+    siteName: env.SITE_NAME,
+    url: env.SITE_URL,
+    images: [{ url: `${env.SITE_URL}/opengraph-image`, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [`${env.SITE_URL}/opengraph-image`],
+  },
+  // Default canonical = the homepage; child pages override via their own
+  // generateMetadata when they have a slug-specific URL.
+  alternates: { canonical: env.SITE_URL },
   robots: { index: true, follow: true },
 };
 

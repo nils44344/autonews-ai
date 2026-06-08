@@ -16,8 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     select: { title: true, objective: true, seoTitle: true, seoDescription: true, status: true, ogImage: true },
   });
   if (!w || w.status !== "PUBLISHED") return { title: "Workflow not found" };
+  const title = w.title.length <= 55 ? w.title : w.title.slice(0, 55) + "…";
   return {
-    title: w.seoTitle ?? w.title,
+    title,
     description: w.seoDescription ?? w.objective.slice(0, 160),
     alternates: { canonical: `${env.SITE_URL}/workflows/${slug}` },
     openGraph: { type: "article", images: w.ogImage ? [w.ogImage] : undefined },

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { safe } from "@/lib/safe";
 import { NewsletterForm } from "@/components/NewsletterForm";
-import { SearchPrompt } from "@/components/SearchPrompt";
 import { scoreTier } from "@/lib/opportunity-score";
 
 // Intelligence-dashboard homepage. Above the fold = hero + search + top 3
@@ -75,48 +74,53 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="space-y-24 md:space-y-28">
-      {/* ─── HERO + SEARCH + TOP OPPORTUNITIES (above the fold) ────────── */}
-      <section className="relative -mx-5 -mt-10 overflow-hidden border-b border-slate-900/60 px-5 pb-12 pt-14 sm:-mx-6 sm:px-6 md:-mt-14 md:pb-20 md:pt-24">
-        <div className="absolute inset-0 -z-10 grid-bg opacity-90" />
+    <div className="space-y-20 md:space-y-24">
+      {/* ─── HERO + TOP OPPORTUNITIES (above the fold) ─────────────────
+          Hero is intentionally compact: the header already exposes the
+          ⌘K search so we removed the duplicate hero search prompt that was
+          surfaced by the first-visitor audit. Padding reduced so the top
+          opportunities sit visible above the fold on a 1080p laptop. */}
+      <section className="relative -mx-5 -mt-10 overflow-hidden border-b border-slate-900/60 px-5 pb-8 pt-8 sm:-mx-6 sm:px-6 md:-mt-14 md:pb-10 md:pt-12">
+        <div className="absolute inset-0 -z-10 grid-bg opacity-80" />
         <div className="mx-auto max-w-content">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-opportunity/30 bg-opportunity/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-opportunity">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-opportunity" />
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-opportunity/30 bg-opportunity/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-opportunity">
+            <span className="h-1 w-1 animate-pulse rounded-full bg-opportunity" />
             AI Intelligence Platform
           </div>
-          <h1 className="font-display text-[2.4rem] font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-[4rem]">
+          <h1 className="font-display text-[2rem] font-extrabold leading-[1.05] tracking-tight text-white sm:text-[2.6rem] md:text-[3.2rem]">
             Discover AI opportunities <br className="hidden sm:block" />
             <span className="bg-gradient-to-r from-opportunity via-signal to-tool bg-clip-text text-transparent">
               before everyone else.
             </span>
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
+          <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-slate-400 md:text-[15px]">
             Track opportunities, signals, tools, workflows, and startups in one place. Stop reading what happened. Start building what&apos;s next.
           </p>
 
-          {/* Search prompt — visual CTA into the command palette. */}
-          <SearchPrompt />
-
-          {/* Three top opportunities right under the fold. Nothing else. */}
           {topOpps.length > 0 && (
-            <div className="mt-12 grid gap-4 sm:grid-cols-3">
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {topOpps.map((o) => {
                 const tier = scoreTier(o.opportunityScore);
                 return (
                   <Link key={o.id} href={`/opportunities/${o.slug}`}
                     className="card card-hover group flex flex-col p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="rounded-full bg-opportunity/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-opportunity">
+                    {/* Top row: kind pill on the left; score + tier on the right
+                        with the score number dominant and tier as a muted micro
+                        line below — fixes the "STRONG 79" cramped inline layout. */}
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <span className="rounded bg-opportunity/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-opportunity">
                         {OPP_KIND[o.kind] ?? o.kind}
                       </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className={`text-[10px] font-bold uppercase ${tier.color}`}>{tier.label}</span>
-                        <span className="font-display text-2xl font-extrabold tabular-nums text-white">
+                      <div className="text-right">
+                        <div className="font-display text-3xl font-extrabold tabular-nums leading-none text-white">
                           {o.opportunityScore.toFixed(0)}
-                        </span>
+                        </div>
+                        <div className={`mt-1 text-[9px] font-bold uppercase tracking-wider ${tier.color}`}>
+                          {tier.label}
+                        </div>
                       </div>
                     </div>
-                    <h3 className="font-display text-base font-bold leading-snug text-white group-hover:text-opportunity">
+                    <h3 className="font-display text-[15px] font-bold leading-snug text-white group-hover:text-opportunity">
                       {o.title}
                     </h3>
                     <p className="mt-2 line-clamp-2 text-[13px] text-slate-400">{o.summary}</p>

@@ -9,8 +9,9 @@ import { PillarHero } from "@/components/PillarHero";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "AI Tools — what to use, what's growing fastest",
+  title: "AI Tools — what's growing fastest",
   description: "Curated AI tools with editorial context. Rankings, momentum scores, and the opportunity each one unlocks.",
+  alternates: { canonical: "/tools" },
 };
 
 const PRICING: Record<string, string> = {

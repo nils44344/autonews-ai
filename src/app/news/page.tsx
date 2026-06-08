@@ -10,6 +10,7 @@ export const revalidate = 180;
 export const metadata: Metadata = {
   title: "AI & Tech News — high-signal updates",
   description: "AI, startups, markets, and tech news. Filtered for what actually moves opportunity.",
+  alternates: { canonical: "/news" },
 };
 
 type LatestRow = {

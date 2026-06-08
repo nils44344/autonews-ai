@@ -10,6 +10,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "AI Startup Radar — who's breaking out",
   description: "Curated AI startups with momentum scores, funding history, and breakout signals.",
+  alternates: { canonical: "/startups" },
 };
 
 const STAGE: Record<string, string> = {

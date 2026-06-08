@@ -21,7 +21,7 @@ export async function generateMetadata({
   if (!cat) return { title: "Not found" };
   return {
     title: `${cat.name} News`,
-    description: `Latest ${cat.name} news, updates and analysis from India.`,
+    description: `Latest ${cat.name} news, opportunities, tool launches, startup funding, and analysis — curated daily from India and global sources, with the so-what for builders.`,
     alternates: { canonical: `${env.SITE_URL}/category/${params.slug}` },
   };
 }

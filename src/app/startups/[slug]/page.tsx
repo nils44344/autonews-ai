@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
   if (!s || s.status !== "PUBLISHED") return { title: "Startup not found" };
   return {
-    title: s.seoTitle ?? `${s.name} — ${s.tagline}`,
+    title: s.name,
     description: s.seoDescription ?? s.tagline,
     alternates: { canonical: `${env.SITE_URL}/startups/${slug}` },
     openGraph: { type: "article", images: s.ogImage ? [s.ogImage] : undefined },

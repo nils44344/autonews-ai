@@ -8,8 +8,9 @@ import { PillarHero } from "@/components/PillarHero";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "AI Workflows — practical systems you can copy",
+  title: "AI Workflows — systems to copy",
   description: "Curated AI workflows for creators, founders, marketers, and developers. Tools, steps, expected results.",
+  alternates: { canonical: "/workflows" },
 };
 
 const KIND: Record<string, string> = {

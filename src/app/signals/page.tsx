@@ -10,6 +10,7 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: "AI Signals — what's exploding right now",
   description: "Live intelligence feed of AI launches, funding, growth bursts, and viral moments. Ranked by momentum.",
+  alternates: { canonical: "/signals" },
 };
 
 const KIND: Record<string, string> = {

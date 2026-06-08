@@ -11,9 +11,12 @@ import { PillarHero } from "@/components/PillarHero";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "AI Opportunities — discover what to build before everyone else",
+  // Title kept under 60 chars so the "| AutoNews AI" template doesn't push us
+  // past Google's display cutoff (audit flagged old title at 76 chars).
+  title: "AI Opportunities — what to build next",
   description:
     "Curated AI opportunities ranked by demand, growth, competition, and monetization. Find your next business, automation, or creator play.",
+  alternates: { canonical: "/opportunities" },
   openGraph: { type: "website" },
 };
 

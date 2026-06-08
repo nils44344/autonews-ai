@@ -36,8 +36,12 @@ export async function generateMetadata({
     select: { title: true, summary: true, seoTitle: true, seoDescription: true, ogImage: true, status: true },
   });
   if (!o || o.status !== "PUBLISHED") return { title: "Opportunity not found" };
+  // Skip the seed-generated seoTitle (it appended "— Opportunity Score X"
+  // which pushed many titles past 70 chars). Use the raw title; the template
+  // in layout.tsx already adds "| AutoNews AI".
+  const title = o.title.length <= 55 ? o.title : o.title.slice(0, 55) + "…";
   return {
-    title: o.seoTitle ?? `${o.title} — AI Opportunity`,
+    title,
     description: o.seoDescription ?? o.summary.slice(0, 160),
     alternates: { canonical: `${env.SITE_URL}/opportunities/${slug}` },
     openGraph: { type: "article", images: o.ogImage ? [o.ogImage] : undefined },
