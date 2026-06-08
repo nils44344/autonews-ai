@@ -42,6 +42,37 @@ body {
   font-feature-settings: "ss01", "cv01", "cv11";
 }
 
+/* ── Theme-aware overrides ─────────────────────────────────────────────
+ * The site was designed dark-first with hardcoded text-white / text-slate-*
+ * classes everywhere. Rather than rewrite every component, these rules let
+ * the existing dark-mode utility classes auto-adapt in light mode. The
+ * result: components keep using text-white as their "primary" semantic,
+ * but it becomes dark in light mode without per-component changes. */
+html:not(.dark) .text-white { color: rgb(var(--fg)); }
+html:not(.dark) .text-slate-100 { color: rgb(var(--fg)); }
+html:not(.dark) .text-slate-200 { color: rgb(15 23 42); }   /* slate-900 */
+html:not(.dark) .text-slate-300 { color: rgb(30 41 59); }   /* slate-800 */
+html:not(.dark) .text-slate-400 { color: rgb(var(--muted-fg)); }
+html:not(.dark) .text-slate-500 { color: rgb(100 116 139); } /* slate-500 stays */
+html:not(.dark) .text-slate-600 { color: rgb(71 85 105); }   /* slate-600 */
+/* Background overrides for dark-only utility classes used as surfaces */
+html:not(.dark) .bg-canvas { background-color: rgb(var(--canvas)); }
+html:not(.dark) .bg-canvas\/85,
+html:not(.dark) .bg-canvas\/95 { background-color: rgb(var(--canvas) / 0.92); }
+/* Hero grid-bg is too bright in light mode — tone it way down. */
+html:not(.dark) .grid-bg {
+  background-image:
+    radial-gradient(circle at 15% 0%,   rgba(34, 211, 184, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 110%, rgba(251, 191, 36, 0.06), transparent 45%),
+    linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 28px 28px, 28px 28px;
+}
+/* The featured-opp gradient headline used "before the market knows." in
+ * solid brand teal — keep as-is in dark (looks great) and ensure decent
+ * contrast in light mode. */
+html:not(.dark) .text-brand { color: rgb(13 148 136); } /* darker teal for AA contrast on white */
+
 /* Selection — brand teal in both modes */
 ::selection { background: rgba(34, 211, 184, 0.35); color: #fff; }
 
