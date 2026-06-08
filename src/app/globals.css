@@ -7,6 +7,15 @@
  * Now properly theme-aware: every canvas-* color is driven by CSS variables
  * so the toggle actually flips the entire surface palette. */
 
+/* Brand + accent default to the platform teal/amber. When a role is chosen,
+ * client-side JS overrides --brand-rgb / --accent-rgb on <html> and the whole
+ * site recolours instantly. Color psychology per role: founder=urgent rose,
+ * creator=pink, developer=teal, marketer=orange, trader=gold, student=violet. */
+:root {
+  --brand-rgb:  34 211 184;  /* default teal */
+  --accent-rgb: 251 191 36;  /* default amber */
+}
+
 /* Channel-format CSS variables: bare "R G B" triplets so Tailwind can apply
  * an alpha modifier (bg-canvas/85 etc.) via rgb(var(--canvas) / <alpha>).
  * Raw hex variables broke the alpha modifier and left the header transparent

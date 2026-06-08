@@ -8,6 +8,7 @@ import { OpportunityRadar } from "@/components/OpportunityRadar";
 import { Sparkline } from "@/components/Sparkline";
 import { AsciiRule } from "@/components/AsciiRule";
 import { PersonalRail } from "@/components/PersonalRail";
+import { RoleHero } from "@/components/RoleHero";
 import { scoreTier } from "@/lib/opportunity-score";
 
 // Homepage — designed as an AI intelligence terminal, not a dashboard.
@@ -100,20 +101,23 @@ export default async function HomePage() {
       <section className="relative -mx-5 -mt-10 overflow-hidden border-b border-canvas-rule px-5 pb-10 pt-10 sm:-mx-6 sm:px-6 md:-mt-14 md:pb-16 md:pt-16">
         <div className="absolute inset-0 -z-10 grid-bg" />
         <div className="mx-auto grid max-w-content gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12">
-          {/* Left: editorial headline */}
+          {/* Left: editorial headline — swaps to role-personalised copy when
+              the visitor has chosen a profile (client-side hydration). */}
           <div className="flex flex-col justify-center">
-            <div className="mb-4 inline-flex w-max items-center gap-2 rounded border border-brand/30 bg-brand/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-bracket text-brand">
-              <span className="h-1 w-1 animate-pulse rounded-full bg-brand" />
-              AI · INTELLIGENCE · TERMINAL
-            </div>
-            <h1 className="font-display text-[2.6rem] font-normal leading-[0.98] tracking-tight text-[color:rgb(var(--fg))] sm:text-[3.4rem] md:text-[4.2rem]">
-              Read the market <br />
-              <span className="italic text-brand">before the market</span> <br />
-              knows.
-            </h1>
-            <p className="mt-6 max-w-md text-[14px] leading-relaxed text-[color:rgb(var(--muted-fg))]">
-              An intelligence terminal for AI opportunities, signals, tools, workflows, and startups. Built for builders who want edge, not summary.
-            </p>
+            <RoleHero>
+              <div className="mb-4 inline-flex w-max items-center gap-2 rounded border border-brand/30 bg-brand/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-bracket text-brand">
+                <span className="h-1 w-1 animate-pulse rounded-full bg-brand" />
+                AI · INTELLIGENCE · TERMINAL
+              </div>
+              <h1 className="font-display text-[2.6rem] font-normal leading-[0.98] tracking-tight text-[color:rgb(var(--fg))] sm:text-[3.4rem] md:text-[4.2rem]">
+                Read the market <br />
+                <span className="italic text-brand">before the market</span> <br />
+                knows.
+              </h1>
+              <p className="mt-6 max-w-md text-[14px] leading-relaxed text-[color:rgb(var(--muted-fg))]">
+                An intelligence terminal for AI opportunities, signals, tools, workflows, and startups. Built for builders who want edge, not summary.
+              </p>
+            </RoleHero>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/opportunities" className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 font-mono text-[12px] font-bold uppercase tracking-bracket text-black hover:bg-brand-light">
                 [→] EXPLORE OPPORTUNITIES

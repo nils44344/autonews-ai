@@ -26,7 +26,30 @@ export function setRole(r: Role | null) {
     if (r === null) localStorage.removeItem(KEY);
     else localStorage.setItem(KEY, r);
   } catch { /* ignore */ }
+  applyRoleTheme(r);
   window.dispatchEvent(new CustomEvent("role:change", { detail: r }));
+}
+
+// Swap the --brand / --accent CSS variables on <html> so every component that
+// uses them (cards, headlines, ticker dots, sparklines) instantly reflects the
+// chosen personality. Also sets data-role for any layout-level overrides.
+export function applyRoleTheme(r: Role | null) {
+  if (typeof document === "undefined") return;
+  const html = document.documentElement;
+  if (!r) {
+    html.removeAttribute("data-role");
+    html.style.removeProperty("--brand-rgb");
+    html.style.removeProperty("--accent-rgb");
+    return;
+  }
+  // Lazy require to avoid a top-level cycle.
+  import("@/lib/role-mapping").then(({ ROLE_MAP }) => {
+    const t = ROLE_MAP[r];
+    if (!t) return;
+    html.setAttribute("data-role", r);
+    html.style.setProperty("--brand-rgb", t.brandRgb);
+    html.style.setProperty("--accent-rgb", t.accentRgb);
+  });
 }
 
 const ROLES: { id: Role; label: string; blurb: string; emoji: string }[] = [
@@ -45,6 +68,8 @@ export function PersonalizationOnboarding() {
   useEffect(() => {
     const existing = getRole();
     setLocalRole(existing);
+    // Re-apply theme on load so a returning visitor sees their personality.
+    applyRoleTheme(existing);
     // First-time visitor → ask after 1s so the page can paint first.
     if (!existing) {
       const t = setTimeout(() => setOpen(true), 1200);

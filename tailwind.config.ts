@@ -30,15 +30,18 @@ const config: Config = {
         ink: { DEFAULT: "rgb(var(--fg) / <alpha-value>)" },
 
         // ── Brand: electric teal (primary) + amber gold (accent) ──
+        // Brand + accent are CSS-variable driven so the role-personality
+        // system can recolor every bg-brand / text-brand / border-brand /
+        // bg-accent etc. instantly without rebuilds.
         brand: {
-          DEFAULT: "#22d3b8",      // electric teal
+          DEFAULT: "rgb(var(--brand-rgb) / <alpha-value>)",
           dark:    "#0d9488",
-          light:   "#5eead4",
+          light:   "rgb(var(--brand-rgb) / 0.7)",
         },
         accent: {
-          DEFAULT: "#fbbf24",      // amber-gold
+          DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
           dark:    "#d97706",
-          light:   "#fde68a",
+          light:   "rgb(var(--accent-rgb) / 0.7)",
         },
 
         // ── Pillars (semantic, anchored to teal/amber axis) ──────
