@@ -7,6 +7,7 @@ import { Ticker } from "@/components/Ticker";
 import { OpportunityRadar } from "@/components/OpportunityRadar";
 import { Sparkline } from "@/components/Sparkline";
 import { AsciiRule } from "@/components/AsciiRule";
+import { PersonalRail } from "@/components/PersonalRail";
 import { scoreTier } from "@/lib/opportunity-score";
 
 // Homepage — designed as an AI intelligence terminal, not a dashboard.
@@ -143,6 +144,12 @@ export default async function HomePage() {
           <Ticker items={tickerItems} />
         </div>
       )}
+
+      {/* ─── PERSONALISED RAIL (only renders if a role is stored) ── */}
+      <PersonalRail opportunities={opps.map((o) => ({
+        id: o.id, slug: o.slug, title: o.title, kind: o.kind,
+        opportunityScore: o.opportunityScore, summary: o.summary,
+      }))} />
 
       {/* ─── [01] FEATURED OPPORTUNITY ─ asymmetric editorial spread */}
       {featured && (

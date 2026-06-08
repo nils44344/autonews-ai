@@ -52,3 +52,8 @@ jobs:
       # across cycles (informational — never fails the job).
       - run: npx tsx scripts/budget-report.ts
         continue-on-error: true
+      # Mine intelligence from the news that was just published: turn news
+      # events into Signals, bump Tool/Startup momentum, draft Opportunities.
+      # Keeps the homepage radar + ticker LIVE instead of frozen on seed data.
+      - run: npx tsx scripts/extract-intelligence.ts
+        continue-on-error: true
