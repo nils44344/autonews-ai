@@ -96,11 +96,11 @@ export default async function HomePage() {
   const top3 = opps.slice(0, 3);
 
   return (
-    <div className="space-y-20 md:space-y-24">
+    <div className="space-y-14 sm:space-y-20 md:space-y-24">
       {/* ─── HERO: editorial headline + SVG radar ─────────────────── */}
-      <section className="relative -mx-5 -mt-10 overflow-hidden border-b border-canvas-rule px-5 pb-10 pt-10 sm:-mx-6 sm:px-6 md:-mt-14 md:pb-16 md:pt-16">
+      <section className="relative -mx-4 -mt-8 overflow-hidden border-b border-canvas-rule px-4 pb-8 pt-8 sm:-mx-6 sm:px-6 sm:pb-10 sm:pt-10 md:-mt-14 md:pb-16 md:pt-16 md:px-8 xl:-mx-12 xl:px-12">
         <div className="absolute inset-0 -z-10 grid-bg" />
-        <div className="mx-auto grid max-w-content gap-10 md:grid-cols-[1.1fr_1fr] md:gap-12">
+        <div className="mx-auto grid max-w-content gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10 lg:gap-12">
           {/* Left: editorial headline — swaps to role-personalised copy when
               the visitor has chosen a profile (client-side hydration). */}
           <div className="flex flex-col justify-center">

@@ -33,7 +33,7 @@ export function BottomNav() {
               <Link
                 href={it.href}
                 className={[
-                  "relative flex h-14 flex-col items-center justify-center gap-1 transition",
+                  "relative flex h-16 flex-col items-center justify-center gap-1 transition",
                   active
                     ? `${it.accent}`
                     : "text-[color:var(--muted-fg)] hover:text-[color:var(--fg)]",

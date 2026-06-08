@@ -150,6 +150,25 @@ html.dark .card-hover:hover {
 .ledger-row:hover { background: rgb(var(--canvas-elevated)); }
 .ledger-row:last-child { border-bottom: none; }
 
+/* ── Responsive polish ────────────────────────────────────────────────
+ * Cap oversized typography on small screens, give every interactive target
+ * a 44px minimum, and prevent horizontal overflow across the whole site. */
+html, body { overflow-x: hidden; }
+
+/* Cap font-size on mobile no matter what utility classes were used */
+@media (max-width: 640px) {
+  h1            { font-size: clamp(1.85rem, 7.5vw, 2.4rem) !important; line-height: 1.08 !important; }
+  h2            { font-size: clamp(1.35rem, 5.5vw, 1.7rem) !important; line-height: 1.15 !important; }
+  h3            { font-size: 1.05rem !important; }
+  .ledger-row   { padding: 0.85rem 0.85rem !important; }
+  section       { scroll-margin-top: 80px; }
+}
+
+/* Touch targets — buttons + links should never be smaller than 36px tall on mobile */
+@media (max-width: 768px) {
+  a, button { min-height: 36px; }
+}
+
 /* Bracketed numeric section labels */
 .bracket-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;

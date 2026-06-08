@@ -38,7 +38,7 @@ export function Ticker({ items }: { items: TickerItem[] }) {
         <span className="font-mono text-[10px] font-bold uppercase tracking-bracket text-brand">LIVE</span>
       </div>
 
-      <div className="flex h-9 w-max items-center gap-10 pl-24 pr-10 animate-ticker">
+      <div className="flex h-9 w-max items-center gap-8 pl-20 pr-8 animate-ticker sm:gap-10 sm:pl-24 sm:pr-10">
         {loop.map((it, i) => {
           const inner = (
             <span className="flex items-center gap-2 whitespace-nowrap text-[12px]">
