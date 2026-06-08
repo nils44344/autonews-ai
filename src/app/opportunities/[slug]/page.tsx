@@ -65,6 +65,17 @@ export default async function OpportunityPage({
   // Bump views asynchronously — never blocks render.
   prisma.opportunity.update({ where: { id: o.id }, data: { views: { increment: 1 } } }).catch(() => {});
 
+  // JSON-LD Article schema so Google can show rich results.
+  const { articleJsonLd } = await import("@/lib/seo/jsonld");
+  const ld = articleJsonLd({
+    url: `${env.SITE_URL}/opportunities/${slug}`,
+    title: o.title,
+    description: o.summary,
+    image: o.ogImage,
+    datePublished: o.publishedAt,
+    dateModified: o.updatedAt,
+  });
+
   const tier = scoreTier(o.opportunityScore);
   const monPaths = Array.isArray(o.monetizationPaths) ? (o.monetizationPaths as unknown as MonetizationPath[]) : [];
   const tools = Array.isArray(o.recommendedTools) ? (o.recommendedTools as unknown as ToolRec[]) : [];
@@ -82,6 +93,7 @@ export default async function OpportunityPage({
 
   return (
     <article className="space-y-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       {/* Header */}
       <header className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">

@@ -35,11 +35,22 @@ export default async function WorkflowPage({ params }: { params: Promise<{ slug:
 
   prisma.workflow.update({ where: { id: w.id }, data: { views: { increment: 1 } } }).catch(() => {});
 
+  const { articleJsonLd } = await import("@/lib/seo/jsonld");
+  const ld = articleJsonLd({
+    url: `${env.SITE_URL}/workflows/${slug}`,
+    title: w.title,
+    description: w.objective.slice(0, 200),
+    image: w.ogImage,
+    datePublished: w.publishedAt,
+    dateModified: w.updatedAt,
+  });
+
   const tools = Array.isArray(w.toolsRequired) ? (w.toolsRequired as unknown as Tool[]) : [];
   const steps = Array.isArray(w.steps) ? (w.steps as unknown as Step[]) : [];
 
   return (
     <article className="space-y-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <header className="space-y-3">
         <Link href="/workflows" className="text-xs font-semibold uppercase tracking-wider text-violet-600 hover:underline dark:text-violet-400">
           ← All Workflows

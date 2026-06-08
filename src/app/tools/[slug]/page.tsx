@@ -33,6 +33,16 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
 
   prisma.tool.update({ where: { id: t.id }, data: { views: { increment: 1 } } }).catch(() => {});
 
+  const { articleJsonLd } = await import("@/lib/seo/jsonld");
+  const ld = articleJsonLd({
+    url: `${env.SITE_URL}/tools/${slug}`,
+    title: t.name,
+    description: t.tagline,
+    image: t.ogImage,
+    datePublished: t.publishedAt,
+    dateModified: t.updatedAt,
+  });
+
   const useCases = Array.isArray(t.useCases) ? (t.useCases as string[]) : [];
   const pros = Array.isArray(t.pros) ? (t.pros as string[]) : [];
   const cons = Array.isArray(t.cons) ? (t.cons as string[]) : [];
@@ -47,6 +57,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
 
   return (
     <article className="space-y-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <header className="space-y-3">
         <Link href="/tools" className="text-xs font-semibold uppercase tracking-wider text-sky-600 hover:underline dark:text-sky-400">
           ← All Tools

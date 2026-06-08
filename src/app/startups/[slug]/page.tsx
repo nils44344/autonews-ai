@@ -38,10 +38,21 @@ export default async function StartupPage({ params }: { params: Promise<{ slug: 
 
   prisma.startup.update({ where: { id: s.id }, data: { views: { increment: 1 } } }).catch(() => {});
 
+  const { articleJsonLd } = await import("@/lib/seo/jsonld");
+  const ld = articleJsonLd({
+    url: `${env.SITE_URL}/startups/${slug}`,
+    title: s.name,
+    description: s.tagline,
+    image: s.ogImage,
+    datePublished: s.publishedAt,
+    dateModified: s.updatedAt,
+  });
+
   const signals = Array.isArray(s.signals) ? (s.signals as unknown as SignalRow[]) : [];
 
   return (
     <article className="space-y-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <header className="space-y-3">
         <Link href="/startups" className="text-xs font-semibold uppercase tracking-wider text-rose-600 hover:underline dark:text-rose-400">
           ← All Startups
