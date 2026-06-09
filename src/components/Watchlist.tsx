@@ -3,10 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-// "My Garage" — client-side watchlist backed by localStorage. Free users
-// can save up to 3 models which forces them back to the site to re-check
-// predictions, lifting recurring-visit metrics for ranking.
-
 const KEY = "ang_watchlist";
 const FREE_LIMIT = 3;
 
@@ -15,12 +11,6 @@ export interface WatchItem {
   brandName: string;
   modelName: string;
   addedAt: number;
-}
-
-interface WatchlistProps {
-  brandSlug?: string;
-  brandName?: string;
-  modelName?: string;
 }
 
 function read(): WatchItem[] {
@@ -37,7 +27,7 @@ function write(items: WatchItem[]) {
   window.dispatchEvent(new CustomEvent("watchlist:change", { detail: items }));
 }
 
-export function Watchlist({ brandSlug, brandName, modelName }: WatchlistProps) {
+export function Watchlist({ brandSlug, brandName, modelName }: { brandSlug?: string; brandName?: string; modelName?: string }) {
   const [items, setItems] = useState<WatchItem[] | null>(null);
 
   useEffect(() => {
@@ -51,8 +41,7 @@ export function Watchlist({ brandSlug, brandName, modelName }: WatchlistProps) {
   }, []);
 
   const isSaved = useCallback(
-    (slug: string, model: string) =>
-      (items ?? []).some((i) => i.brandSlug === slug && i.modelName === model),
+    (slug: string, model: string) => (items ?? []).some((i) => i.brandSlug === slug && i.modelName === model),
     [items],
   );
 
@@ -65,56 +54,54 @@ export function Watchlist({ brandSlug, brandName, modelName }: WatchlistProps) {
       return;
     }
     if (current.length >= FREE_LIMIT) {
-      alert(`Free tier limit (${FREE_LIMIT}) reached. Remove a vehicle to save another.`);
+      alert(`Free tier: maximum ${FREE_LIMIT} vehicles. Remove one to save another.`);
       return;
     }
     write([{ brandSlug, brandName, modelName, addedAt: Date.now() }, ...current]);
   }
 
-  if (items === null) {
-    return <div className="skeleton h-10 w-40" aria-label="Loading watchlist" />;
-  }
+  if (items === null) return <div className="skel h-44 w-72" aria-label="Loading" />;
 
   return (
-    <section aria-labelledby="watchlist-h" className="card p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 id="watchlist-h" className="bracket text-brand">[ MY GARAGE · {items.length}/{FREE_LIMIT} ]</h3>
-        {brandSlug && brandName && modelName && (
-          <button
-            type="button"
-            onClick={toggle}
-            className={[
-              "rounded-md border px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-bracket transition",
-              isSaved(brandSlug, modelName)
-                ? "border-brand/50 bg-brand/10 text-brand"
-                : "border-canvas-rule bg-canvas hover:border-brand/40 hover:text-brand",
-            ].join(" ")}
-          >
-            {isSaved(brandSlug, modelName) ? "[★] SAVED" : "[+] TRACK"}
-          </button>
-        )}
+    <aside className="w-full max-w-xs surface p-5 lg:w-72">
+      <div className="flex items-center justify-between">
+        <div className="label label-brand">My Garage · {items.length}/{FREE_LIMIT}</div>
       </div>
+
+      {brandSlug && brandName && modelName && (
+        <button
+          type="button"
+          onClick={toggle}
+          className={[
+            "mt-5 w-full rounded-lg px-3 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition",
+            isSaved(brandSlug, modelName)
+              ? "border border-brand bg-brand/10 text-brand"
+              : "bg-brand text-black hover:brightness-105",
+          ].join(" ")}
+        >
+          {isSaved(brandSlug, modelName) ? "Saved" : "Add to garage"}
+        </button>
+      )}
+
       {items.length === 0 ? (
-        <p className="text-[12px] text-slate-400">No vehicles tracked yet. Save up to {FREE_LIMIT} to monitor 30-day price predictions.</p>
+        <p className="mt-5 text-[12px] text-slate-500">No vehicles tracked. Save up to {FREE_LIMIT} to monitor 30-day price predictions.</p>
       ) : (
-        <ul className="space-y-1.5">
+        <ul className="mt-5 space-y-1">
           {items.map((it) => (
             <li key={`${it.brandSlug}-${it.modelName}`} className="flex items-center justify-between rounded border border-canvas-rule px-3 py-2">
-              <Link href={`/trends/${it.brandSlug}`} className="text-[13px] font-medium hover:text-brand">
-                {it.brandName} <span className="text-slate-500">·</span> {it.modelName}
+              <Link href={`/trends/${it.brandSlug}`} className="text-[13px] hover:text-brand">
+                <span className="font-medium">{it.brandName}</span> · {it.modelName}
               </Link>
               <button
                 type="button"
-                aria-label={`Remove ${it.brandName} ${it.modelName} from watchlist`}
+                aria-label={`Remove ${it.modelName}`}
                 onClick={() => write(read().filter((x) => !(x.brandSlug === it.brandSlug && x.modelName === it.modelName)))}
-                className="font-mono text-[10px] text-slate-500 hover:text-down"
-              >
-                [×]
-              </button>
+                className="text-[12px] text-slate-600 hover:text-down"
+              >×</button>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </aside>
   );
 }

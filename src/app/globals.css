@@ -2,22 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Predictive Automotive Market Dashboard — premium financial terminal palette.
- * Pure-black canvas, electric cyan primary, amber alert accent, mono numerics. */
+/* Premium financial-terminal aesthetic. Less is more. Single accent. Generous
+ * whitespace. Inspired by Stripe / Linear / Bloomberg Pro / Edition.
+ * Pure black canvas, off-white body, electric cyan accent (only). */
 
 :root {
-  --bg:              0 0 0;
-  --canvas:          6 8 12;
-  --canvas-raised:   12 16 22;
-  --canvas-elevated: 20 26 36;
-  --canvas-rule:     30 38 52;
+  --bg:              0   0   0;
+  --canvas:          0   0   0;
+  --canvas-raised:   10  10  12;
+  --canvas-elevated: 18  18  22;
+  --canvas-rule:     32  32  38;
   --fg:              245 245 240;
-  --muted-fg:        148 163 184;
+  --muted-fg:        140 140 142;
+  --dim-fg:          82  82  88;
 
-  --brand:           34 211 184;   /* electric cyan-teal */
-  --accent:          251 191 36;   /* amber */
-  --up:              52 211 153;   /* gain */
-  --down:            248 113 113;  /* loss */
+  --brand:           34 211 184;
+  --up:              52 211 153;
+  --down:            248 113 113;
+  --warn:            251 191 36;
 }
 
 html { color-scheme: dark; scroll-behavior: smooth; }
@@ -32,64 +34,67 @@ body {
 html, body { overflow-x: hidden; }
 
 ::selection { background: rgba(34, 211, 184, 0.4); color: #fff; }
-::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgb(var(--canvas-rule)); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgb(var(--canvas-elevated)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--canvas-rule)); border-radius: 4px; }
 
-/* Tabular numerals — financial-style alignment */
 .tnum { font-feature-settings: "tnum" 1, "lnum" 1; font-variant-numeric: tabular-nums; }
 
-/* Card primitive */
-.card {
+/* Refined typography — large display numbers + readable body */
+h1 { font-size: clamp(2.2rem, 1.3rem + 4vw, 4.2rem); line-height: 1.02; letter-spacing: -0.025em; font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 1.05rem + 1.9vw, 2.4rem); line-height: 1.1;  letter-spacing: -0.015em; font-weight: 700; }
+h3 { font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem); line-height: 1.3; font-weight: 600; }
+p  { max-width: 65ch; }
+
+/* Display number — used for hero metrics. Huge, mono, tabular */
+.display-num {
+  font-family: var(--font-geist-mono), monospace;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(3rem, 2rem + 5vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+/* Label — refined small uppercase */
+.label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(var(--muted-fg));
+}
+.label-brand { color: rgb(var(--brand)); }
+
+/* Surface card — minimal */
+.surface {
   background: rgb(var(--canvas-raised));
   border: 1px solid rgb(var(--canvas-rule));
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 1px 2px rgba(0,0,0,0.4);
+  border-radius: 14px;
   contain: layout style;
 }
 
-/* Grid backdrop for hero */
-.grid-bg {
-  background-image:
-    radial-gradient(circle at 15% 0%, rgba(34, 211, 184, 0.10), transparent 45%),
-    radial-gradient(circle at 85% 100%, rgba(251, 191, 36, 0.08), transparent 45%),
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: auto, auto, 28px 28px, 28px 28px;
-}
-
-/* Skeleton shimmer — used to eliminate CLS on data charts */
-.skeleton {
-  position: relative;
+/* Skeleton */
+.skel {
   background: rgb(var(--canvas-elevated));
-  border-radius: 0.5rem;
+  border-radius: 8px;
+  position: relative;
   overflow: hidden;
 }
-.skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+.skel::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
   animation: shimmer 1.6s linear infinite;
 }
 @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-/* Fluid typography */
-h1 { font-size: clamp(1.9rem, 1.1rem + 3.2vw, 3.4rem); line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
-h2 { font-size: clamp(1.35rem, 0.95rem + 1.7vw, 2rem); line-height: 1.15; font-weight: 700; }
-h3 { font-size: clamp(1rem, 0.85rem + 0.6vw, 1.25rem); line-height: 1.25; font-weight: 600; }
-p  { max-width: 70ch; }
-
-/* Bracketed label */
-.bracket {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgb(var(--muted-fg));
+/* Glow accent for hero */
+.aurora {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(34, 211, 184, 0.10), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, rgba(34, 211, 184, 0.06), transparent 60%);
 }
 
-/* Touch targets */
 @media (max-width: 768px) { a, button { min-height: 40px; } }

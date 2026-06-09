@@ -1,24 +1,40 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { TOP_BRANDS } from "@/lib/brands";
 import { CATEGORIES } from "@/lib/categories";
-import { formatUsd, formatSigned, dateShort } from "@/lib/format";
-import { SkeletonChart, SkeletonRow } from "@/components/SkeletonChart";
-import { Watchlist } from "@/components/Watchlist";
+import { formatUsd, formatSigned } from "@/lib/format";
 import { datasetSchema, ldScript } from "@/lib/jsonld";
 import { env } from "@/lib/env";
 
-// Server Component — fetches market data + renders dashboard entirely on
-// server. Zero heavy JS shipped to the client. Watchlist is the only
-// client component on the page (interactivity isolated).
-
-export const revalidate = 300; // ISR: 5 min
+export const revalidate = 300;
 
 export default async function HomePage() {
+  // Pull data in parallel
+  const [latestSentiments, latestPredictions, brandCount] = await Promise.all([
+    prisma.brandSentiment.findMany({ orderBy: { asOf: "desc" }, take: 50, include: { brand: true } }).catch(() => []),
+    prisma.pricePrediction.findMany({ orderBy: { asOf: "desc" }, take: 50, include: { brand: true } }).catch(() => []),
+    prisma.brand.count().catch(() => 0),
+  ]);
+
+  // Latest sentiment per brand
+  const latestByBrand = new Map<string, typeof latestSentiments[number]>();
+  for (const s of latestSentiments) if (!latestByBrand.has(s.brandId)) latestByBrand.set(s.brandId, s);
+  const sentiments = Array.from(latestByBrand.values());
+
+  // Top 3 by sentiment + top 3 movers (biggest price delta)
+  const topSentiment = [...sentiments].sort((a, b) => b.score - a.score).slice(0, 3);
+  const movers = [...latestPredictions]
+    .map((p) => ({ ...p, deltaPct: ((p.predictedPriceUsd - p.currentPriceUsd) / p.currentPriceUsd) * 100 }))
+    .sort((a, b) => Math.abs(b.deltaPct) - Math.abs(a.deltaPct))
+    .slice(0, 4);
+
+  // Headline stats
+  const avgSentiment = sentiments.length ? sentiments.reduce((a, s) => a + s.score, 0) / sentiments.length : 0;
+  const totalMentions = sentiments.reduce((a, s) => a + s.mentionCount, 0);
+
   const ld = datasetSchema({
-    name: "AutoNews AI — Predictive Automotive Market Dashboard",
-    description: "Live AI-driven dashboard tracking brand sentiment, 30-day price predictions, EV adoption, and category trends across the top 50 global car brands.",
+    name: "AutoNews AI — Predictive Automotive Market Intelligence",
+    description: "AI-driven brand sentiment, 30-day price predictions, and category trends for the 50 most-watched car brands.",
     url: env.SITE_URL,
     keywords: ["automotive market", "AI sentiment", "EV forecast", "car price prediction"],
   });
@@ -28,219 +44,150 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(ld) }} />
 
       {/* HERO ─────────────────────────────────────────── */}
-      <section className="relative -mx-4 mb-12 overflow-hidden border-b border-canvas-rule px-4 pb-10 pt-10 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 md:pb-14 md:pt-14">
-        <div className="absolute inset-0 -z-10 grid-bg" />
-        <div className="mx-auto max-w-content">
-          <p className="bracket text-brand">[ AI · AUTOMOTIVE · TERMINAL ]</p>
-          <h1 className="mt-4 max-w-4xl text-white">
-            Predictive automotive market dashboard.
-          </h1>
-          <p className="mt-5 max-w-2xl text-[15px] text-slate-400">
-            AI-driven sentiment, 30-day price predictions, and category forecasts for the top 50 global car brands. Refreshed every cycle. Used by analysts, dealers, and enthusiasts to read the market early.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/trends/tesla" className="inline-flex h-10 items-center rounded-md bg-brand px-4 font-mono text-[12px] font-bold uppercase tracking-bracket text-black hover:brightness-95">
-              [→] BRAND TRENDS
-            </Link>
-            <Link href="/predictions/ev" className="inline-flex h-10 items-center rounded-md border border-canvas-rule bg-canvas-raised px-4 font-mono text-[12px] font-bold uppercase tracking-bracket text-white hover:border-brand/40 hover:text-brand">
-              EV FORECAST
-            </Link>
-          </div>
+      <section className="relative isolate mb-24 pb-12 sm:mb-32">
+        <div className="absolute inset-0 -z-10 aurora" aria-hidden />
+        <div className="label label-brand">Predictive Market Intelligence</div>
+        <h1 className="mt-5 max-w-4xl text-white">
+          Read the automotive market <span className="text-brand">before it moves.</span>
+        </h1>
+        <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-400 sm:text-[16px]">
+          AI-driven sentiment scoring, 30-day price predictions, and category forecasts for the 50 most-watched global car brands. Refreshed every cycle from real public signal.
+        </p>
+        <div className="mt-9 flex flex-wrap gap-3">
+          <Link href="/trends/tesla" className="inline-flex h-11 items-center gap-2 rounded-lg bg-brand px-5 text-[13px] font-semibold text-black transition hover:brightness-105">
+            Explore brand trends →
+          </Link>
+          <Link href="/predictions/ev" className="inline-flex h-11 items-center gap-2 rounded-lg border border-canvas-rule px-5 text-[13px] font-semibold text-white transition hover:border-brand/40 hover:text-brand">
+            EV forecast
+          </Link>
+        </div>
+
+        {/* Stat strip */}
+        <div className="mt-16 grid gap-px overflow-hidden rounded-xl border border-canvas-rule bg-canvas-rule sm:grid-cols-3">
+          <StatBlock label="Brands tracked" value={brandCount.toString()} sub={`${TOP_BRANDS.length} in catalog`} />
+          <StatBlock
+            label="Avg sentiment"
+            value={`${avgSentiment >= 0 ? "+" : ""}${avgSentiment.toFixed(0)}`}
+            sub={avgSentiment >= 0 ? "Net positive" : "Net negative"}
+            tone={avgSentiment >= 0 ? "up" : "down"}
+          />
+          <StatBlock
+            label="Mentions / 24h"
+            value={totalMentions > 1e6 ? `${(totalMentions / 1e6).toFixed(1)}M` : totalMentions > 1e3 ? `${(totalMentions / 1e3).toFixed(0)}k` : totalMentions.toString()}
+            sub="Live signal"
+          />
         </div>
       </section>
 
-      {/* DASHBOARD GRID ───────────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-10">
-          <Suspense fallback={<SkeletonChart height={300} />}>
-            <TopMoversPanel />
-          </Suspense>
+      {/* FEATURED — TOP MOVERS ─────────────────────────── */}
+      {movers.length > 0 && (
+        <section className="mb-24">
+          <SectionHead label="01 / Top Movers" title="Where price is going in the next 30 days." trailing={<Link href="/predictions/ev" className="text-[12px] text-slate-500 hover:text-white">All forecasts →</Link>} />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-canvas-rule bg-canvas-rule sm:grid-cols-2 lg:grid-cols-4">
+            {movers.map((m) => {
+              const up = m.deltaPct >= 0;
+              return (
+                <Link key={m.id} href={`/trends/${m.brand.slug}`} className="group bg-canvas-raised p-6 transition hover:bg-canvas-elevated">
+                  <div className="label">{m.brand.name} · {m.category}</div>
+                  <div className="mt-1 text-[15px] font-semibold">{m.modelName}</div>
+                  <div className="mt-6 flex items-baseline gap-2">
+                    <span className={`display-num text-[2.8rem] ${up ? "text-up" : "text-down"}`}>
+                      {formatSigned(m.deltaPct)}%
+                    </span>
+                  </div>
+                  <div className="mt-2 text-[12px] text-slate-500">
+                    {formatUsd(m.currentPriceUsd)} → {formatUsd(m.predictedPriceUsd)}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-          <Suspense fallback={<SkeletonChart height={260} />}>
-            <SentimentLeaderboard />
-          </Suspense>
+      {/* FEATURED — SENTIMENT LEADERS ──────────────────── */}
+      {topSentiment.length > 0 && (
+        <section className="mb-24">
+          <SectionHead label="02 / Sentiment Leaders" title="Brands the market loves right now." trailing={<Link href="/trends/tesla" className="text-[12px] text-slate-500 hover:text-white">All brands →</Link>} />
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            {topSentiment.map((s, i) => (
+              <Link key={s.id} href={`/trends/${s.brand.slug}`} className="surface group p-7 transition hover:border-brand/30">
+                <div className="flex items-start justify-between">
+                  <div className="label">#{String(i + 1).padStart(2, "0")}</div>
+                  <div className="label">{s.brand.country}</div>
+                </div>
+                <h3 className="mt-4 text-[1.75rem] font-bold leading-tight">{s.brand.name}</h3>
+                <div className="mt-8 flex items-baseline gap-3">
+                  <span className={`display-num text-[3.2rem] ${s.score >= 33 ? "text-up" : s.score <= -33 ? "text-down" : "text-warn"}`}>
+                    {s.score >= 0 ? "+" : ""}{s.score.toFixed(0)}
+                  </span>
+                  <span className="label">sentiment</span>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-1.5">
+                  {s.topTopics.slice(0, 3).map((t) => (
+                    <span key={t} className="rounded-full border border-canvas-rule bg-canvas px-2.5 py-0.5 text-[11px] text-slate-400">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
-          <CategoryGrid />
-
-          <Suspense fallback={<SkeletonChart height={300} />}>
-            <BrandGrid />
-          </Suspense>
+      {/* CATEGORIES ─────────────────────────────────────── */}
+      <section className="mb-24">
+        <SectionHead label="03 / Categories" title="Forecasts by segment." />
+        <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-canvas-rule bg-canvas-rule sm:grid-cols-2 lg:grid-cols-4">
+          {CATEGORIES.map((c) => (
+            <Link key={c.slug} href={`/predictions/${c.slug}`} className="group bg-canvas-raised p-6 transition hover:bg-canvas-elevated">
+              <div className="label label-brand">{c.slug.toUpperCase()}</div>
+              <div className="mt-2 text-[1.05rem] font-semibold">{c.name}</div>
+              <p className="mt-2 line-clamp-2 text-[12px] text-slate-500">{c.description}</p>
+              <div className="mt-4 text-[12px] text-brand opacity-0 transition group-hover:opacity-100">View forecast →</div>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        <aside className="space-y-6">
-          <Watchlist />
-          <DataNote />
-        </aside>
-      </div>
+      {/* BRAND DIRECTORY ────────────────────────────────── */}
+      <section>
+        <SectionHead label="04 / Brand Directory" title={`${TOP_BRANDS.length} global brands tracked.`} />
+        <ul className="mt-10 grid gap-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {TOP_BRANDS.map((b) => (
+            <li key={b.slug}>
+              <Link href={`/trends/${b.slug}`} className="flex items-center justify-between border-b border-canvas-rule py-3 transition hover:border-brand/30 hover:text-brand">
+                <span className="text-[14px] font-medium">{b.name}</span>
+                <span className="text-[11px] text-slate-600">{b.country}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </>
   );
 }
 
-// ── Server components ─────────────────────────────────
-
-async function TopMoversPanel() {
-  const recent = await prisma.pricePrediction.findMany({
-    orderBy: { asOf: "desc" },
-    take: 6,
-    include: { brand: true },
-  }).catch(() => []);
-
+function SectionHead({ label, title, trailing }: { label: string; title: string; trailing?: React.ReactNode }) {
   return (
-    <section aria-labelledby="movers-h" className="card">
-      <header className="flex items-center justify-between border-b border-canvas-rule px-5 py-3">
-        <h2 id="movers-h" className="bracket text-brand">[ 01 · TOP MOVERS · 30D ]</h2>
-        <span className="bracket">PRICE FORECAST</span>
-      </header>
-      {recent.length === 0 ? (
-        <EmptyPanel msg="Predictions populate on first ingest." />
-      ) : (
-        <ul className="divide-y divide-canvas-rule">
-          {recent.map((p) => {
-            const delta = p.predictedPriceUsd - p.currentPriceUsd;
-            const pct = (delta / p.currentPriceUsd) * 100;
-            const up = delta >= 0;
-            return (
-              <li key={p.id}>
-                <Link href={`/trends/${p.brand.slug}`} className="flex items-center gap-4 px-5 py-3 hover:bg-canvas-elevated">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-semibold">{p.brand.name} · {p.modelName}</div>
-                    <div className="bracket mt-0.5">{p.category}</div>
-                  </div>
-                  <div className="text-right font-mono tnum">
-                    <div className="text-[12px] text-slate-500">{formatUsd(p.currentPriceUsd)}</div>
-                    <div className={`text-[14px] font-bold ${up ? "text-up" : "text-down"}`}>
-                      {formatUsd(p.predictedPriceUsd)}
-                    </div>
-                    <div className={`text-[11px] ${up ? "text-up" : "text-down"}`}>{formatSigned(pct)}%</div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-async function SentimentLeaderboard() {
-  const top = await prisma.brandSentiment.findMany({
-    orderBy: [{ asOf: "desc" }],
-    take: 50,
-    include: { brand: true },
-  }).catch(() => []);
-
-  // Dedup to latest per brand
-  const latest = new Map<string, typeof top[number]>();
-  for (const s of top) if (!latest.has(s.brandId)) latest.set(s.brandId, s);
-  const ranked = Array.from(latest.values()).sort((a, b) => b.score - a.score).slice(0, 8);
-
-  return (
-    <section aria-labelledby="senti-h" className="card">
-      <header className="flex items-center justify-between border-b border-canvas-rule px-5 py-3">
-        <h2 id="senti-h" className="bracket text-brand">[ 02 · SENTIMENT LEADERBOARD ]</h2>
-        <span className="bracket">AI · LIVE</span>
-      </header>
-      {ranked.length === 0 ? (
-        <EmptyPanel msg="Sentiment scores populate after the first ingest." />
-      ) : (
-        <ol className="divide-y divide-canvas-rule">
-          {ranked.map((s, i) => (
-            <li key={s.id}>
-              <Link href={`/trends/${s.brand.slug}`} className="flex items-center gap-4 px-5 py-3 hover:bg-canvas-elevated">
-                <span className="w-8 font-mono text-[11px] text-slate-500">{String(i + 1).padStart(2, "0")}</span>
-                <span className="flex-1 text-[14px] font-semibold">{s.brand.name}</span>
-                <div className="flex items-center gap-3">
-                  <Bar value={s.score} />
-                  <span className={`w-12 text-right font-mono text-[13px] font-bold tnum ${s.score >= 33 ? "text-up" : s.score <= -33 ? "text-down" : "text-accent"}`}>
-                    {s.score >= 0 ? "+" : ""}{s.score.toFixed(0)}
-                  </span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  );
-}
-
-function Bar({ value }: { value: number }) {
-  const w = ((Math.max(-100, Math.min(100, value)) + 100) / 200) * 100;
-  return (
-    <div className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-canvas-elevated sm:block">
-      <div className="h-full rounded-full" style={{
-        width: `${w}%`,
-        background: value >= 33 ? "rgb(var(--up))" : value <= -33 ? "rgb(var(--down))" : "rgb(var(--accent))",
-      }} />
+    <div className="flex items-end justify-between gap-6 border-b border-canvas-rule pb-4">
+      <div>
+        <div className="label label-brand">{label}</div>
+        <h2 className="mt-2">{title}</h2>
+      </div>
+      {trailing}
     </div>
   );
 }
 
-function CategoryGrid() {
+function StatBlock({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "up" | "down" }) {
+  const c = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-white";
   return (
-    <section aria-labelledby="cat-h">
-      <h2 id="cat-h" className="bracket text-brand mb-4">[ 03 · CATEGORY FORECASTS ]</h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {CATEGORIES.map((c) => (
-          <li key={c.slug}>
-            <Link href={`/predictions/${c.slug}`} className="card block p-4 hover:border-brand/40">
-              <div className="bracket text-brand">[ {c.slug.toUpperCase()} ]</div>
-              <div className="mt-2 text-[15px] font-semibold">{c.name}</div>
-              <p className="mt-1 line-clamp-2 text-[12px] text-slate-400">{c.description}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-async function BrandGrid() {
-  const dbBrands = await prisma.brand.findMany({
-    select: { slug: true, name: true, country: true },
-    orderBy: { name: "asc" },
-  }).catch(() => []);
-  const merged = TOP_BRANDS.map((b) => ({
-    ...b,
-    inDb: dbBrands.some((d) => d.slug === b.slug),
-  }));
-
-  return (
-    <section aria-labelledby="brand-h">
-      <h2 id="brand-h" className="bracket text-brand mb-4">[ 04 · BRAND DIRECTORY · {merged.length} ]</h2>
-      <ul className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {merged.map((b) => (
-          <li key={b.slug}>
-            <Link href={`/trends/${b.slug}`} className="card flex items-center justify-between px-3 py-2 hover:border-brand/40">
-              <span className="text-[13px] font-semibold">{b.name}</span>
-              <span className="bracket">{b.country.slice(0, 3).toUpperCase()}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function DataNote() {
-  return (
-    <section className="card p-4">
-      <h3 className="bracket text-brand">[ DATA · NOTE ]</h3>
-      <p className="mt-2 text-[12px] leading-relaxed text-slate-400">
-        Predictions combine real-time sentiment, inventory signals, and historical price elasticity. Updated every ingest cycle. Last refresh: {dateShort(new Date())}.
-      </p>
-    </section>
-  );
-}
-
-function EmptyPanel({ msg }: { msg: string }) {
-  return (
-    <div className="px-5 py-10 text-center">
-      <p className="text-[13px] text-slate-500">{msg}</p>
-      <ol className="mx-auto mt-3 grid max-w-md gap-1.5">
-        {[0, 1, 2].map((i) => <SkeletonRow key={i} height={36} />)}
-      </ol>
+    <div className="bg-canvas-raised p-7">
+      <div className="label">{label}</div>
+      <div className={`display-num mt-3 text-[3.5rem] ${c}`}>{value}</div>
+      <div className="mt-2 text-[12px] text-slate-500">{sub}</div>
     </div>
   );
 }
