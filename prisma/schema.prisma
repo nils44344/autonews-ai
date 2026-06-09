@@ -1,5 +1,5 @@
-// Schema reset — wiped 2026-06-08 for new business pivot. Keep Prisma wired
-// so the next build can iterate fast without redoing infra.
+// Predictive Automotive Market Dashboard — Prisma schema.
+// PostgreSQL + Prisma. Run `npx prisma db push` to apply.
 
 generator client {
   provider      = "prisma-client-js"
@@ -11,8 +11,91 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Minimal placeholder so prisma generate doesn't fail. Replace with real
-// models once the new product direction is decided.
+// ── Brands (Tesla, Ford, Toyota, …) ─────────────────────────────────
+model Brand {
+  id          String            @id @default(cuid())
+  slug        String            @unique // url-safe identifier (e.g. "tesla")
+  name        String
+  country     String?
+  founded     Int?
+  logoUrl     String?
+  description String?           @db.Text
+
+  sentiments  BrandSentiment[]
+  predictions PricePrediction[]
+  marketData  MarketData[]
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+// ── Market data points (sales, market share, volumes, indices) ──────
+model MarketData {
+  id        String   @id @default(cuid())
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId   String
+  category  String   // EV / SUV / Hybrid / Sedan / Truck / …
+  metric    String   // marketShare / salesVolume / averagePrice / inventoryIndex
+  value     Float
+  unit      String?  // "%", "units", "USD", "index"
+  asOf      DateTime
+  createdAt DateTime @default(now())
+
+  @@index([brandId, asOf])
+  @@index([category, asOf])
+  @@index([metric])
+}
+
+// ── Sentiment time-series — driven by AI ingestion ─────────────────
+model BrandSentiment {
+  id           String   @id @default(cuid())
+  brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId      String
+  score        Float    // -100 (very negative) → +100 (very positive)
+  mentionCount Int      @default(0)
+  positivePct  Float    @default(0) // 0–100
+  negativePct  Float    @default(0)
+  neutralPct   Float    @default(0)
+  topTopics    String[] // ["range anxiety", "FSD beta", …]
+  asOf         DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([brandId, asOf])
+}
+
+// ── 30-day price predictions for individual models ─────────────────
+model PricePrediction {
+  id                String   @id @default(cuid())
+  brand             Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId           String
+  modelName         String
+  category          String
+  currentPriceUsd   Float
+  predictedPriceUsd Float
+  lowUsd            Float    // confidence interval low
+  highUsd           Float    // confidence interval high
+  confidence        Float    // 0–100
+  trend             String   // up | down | flat
+  horizonDays       Int      @default(30)
+  asOf              DateTime
+  createdAt         DateTime @default(now())
+
+  @@index([brandId, asOf])
+  @@index([category])
+  @@index([asOf])
+}
+
+// ── Optional server-side watchlist (mirrors localStorage for logged-in users
+// when auth is added later). For free tier, watchlist lives in browser. ──
+model UserWatchlist {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  items     Json     // [{ brandSlug, modelName, addedAt }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Audit/ops log (used by ingest API + revalidation) ──────────────
 model JobLog {
   id        String   @id @default(cuid())
   job       String
