@@ -24,4 +24,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      # Real public-data ingest (Reddit + HackerNews). Falls back to the
+      # heuristic refresh if the live sources are unreachable.
+      - run: npx tsx scripts/ingest-live.ts
+        continue-on-error: true
       - run: npx tsx scripts/refresh-data.ts
+        continue-on-error: true
