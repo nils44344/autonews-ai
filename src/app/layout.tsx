@@ -3,6 +3,7 @@ import Link from "next/link";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { env } from "@/lib/env";
+import { Logo } from "@/components/Logo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -42,7 +43,7 @@ function Header() {
     <header className="sticky top-0 z-30 border-b border-canvas-rule bg-black/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-content items-center gap-8 px-5 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <Mark />
+          <Logo size={36} className="text-white" />
           <span className="text-[15px] font-bold tracking-tight">AutoNews</span>
           <span className="hidden text-[15px] text-brand sm:inline">AI</span>
         </Link>
@@ -65,15 +66,6 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
-function Mark() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="14" stroke="rgb(var(--brand))" strokeWidth="1.5" />
-      <path d="M11 22 L16 10 L21 22 M12.5 18 L19.5 18" stroke="rgb(var(--brand))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function Footer() {
   return (
     <footer className="mt-32 border-t border-canvas-rule">
@@ -81,7 +73,7 @@ function Footer() {
         <div className="flex flex-wrap items-start justify-between gap-8">
           <div className="max-w-sm">
             <div className="flex items-center gap-2">
-              <Mark />
+              <Logo size={30} className="text-white" />
               <span className="font-bold">AutoNews AI</span>
             </div>
             <p className="mt-3 text-[13px] text-slate-500">
